@@ -93,3 +93,35 @@ class LiquorStreamEvent(BaseModel):
 class LiveRecognitionAcceptedResponse(BaseModel):
     status: Literal["success"] = Field(description="요청 처리 결과 상태입니다.")
     message: str = Field(description="처리 결과를 설명하는 메시지입니다.")
+
+
+class LiquorScanStartRequest(BaseModel):
+    triggered_by: str = Field(
+        min_length=1,
+        max_length=100,
+        description="주류 스캔 요청을 발생시킨 주체입니다. 예: frontend",
+        examples=["frontend"],
+    )
+    device_id: str = Field(
+        min_length=1,
+        max_length=100,
+        description="스캔 요청을 보낸 디바이스 식별자입니다. 예: display-01",
+        examples=["display-01"],
+    )
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "triggered_by": "frontend",
+                "device_id": "display-01",
+            }
+        }
+    }
+
+
+class LiquorScanStartResponse(BaseModel):
+    status: Literal["accepted"] = Field(
+        description="주류 스캔 요청이 정상적으로 접수되었음을 나타냅니다."
+    )
+    message: str = Field(description="주류 스캔 시작 처리 결과 메시지입니다.")
+    scan_request_id: str = Field(description="이번 주류 스캔 요청을 식별하는 ID입니다.")

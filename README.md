@@ -23,6 +23,9 @@
 - `GET /api/v1/stream/liquor`
 - `GET /api/v1/stream/recommendations`
 
+### 스캔 요청
+- `POST /api/v1/scan/liquor/start`
+
 ### 내부 입력용 API
 아래 API는 Jetson/AI가 백엔드로 인식 결과를 보내는 내부용 API입니다.
 Swagger 문서에는 숨겨져 있습니다.
@@ -49,6 +52,11 @@ Swagger 문서에는 숨겨져 있습니다.
 1. Jetson/AI가 주류 인식 결과를 내부 API로 전송
 2. 백엔드가 `liquor` SSE 스트림으로 주류 이름을 즉시 전달
 3. 약간의 지연 후 `recommendation` SSE 스트림으로 추천 결과를 전달
+
+### 주류 수동 스캔 요청
+1. 프론트가 `POST /api/v1/scan/liquor/start`로 스캔 시작 요청
+2. 백엔드가 `accepted` 응답과 `scan_request_id`를 먼저 반환
+3. 이후 mock 스캔 흐름이 실행되며 약 3초 뒤 `liquor` SSE, 그 다음 약간의 지연 후 `recommendation` SSE를 순차적으로 발행
 
 즉 현재 프론트는 **SSE를 구독만 하고 있어도** 술 이름과 추천 결과를 순차적으로 받을 수 있습니다.
 
@@ -131,6 +139,9 @@ Jetson/AI 내부 입력용 API는 문서에서 숨깁니다.
 - `GET /api/v1/stream/ingredients`
 - `GET /api/v1/stream/liquor`
 - `GET /api/v1/stream/recommendations`
+
+### 스캔 요청
+- `POST /api/v1/scan/liquor/start`
 
 ### 추천
 - `GET /api/v1/recommendations?liquor=soju&refresh=false`
