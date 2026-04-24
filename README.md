@@ -79,9 +79,27 @@
 - 추천 대상 주류
 - 추천 이름
 - 추천 이유
-- 조리 순서
-- 필요 재료 목록
+- 기준 인분 수
+- 예상 조리 시간
+- 조리 난이도
+- 정량화된 재료 목록
+- 상온 기본 양념 목록
+- 단계별 조리 순서
+- 조리 팁
 - refresh용 보조 세트 구분값
+
+상세 레시피 seed를 일괄 보강할 때는 아래 스크립트를 사용합니다.
+
+- `scripts/enrich_recommendation_seeds.py`
+
+이 스크립트는 현재 70개 seed 레시피에 대해 아래 필드를 자동으로 채웁니다.
+
+- `servings`
+- `cook_time_minutes`
+- `difficulty`
+- `ingredient_details`
+- `pantry_items`
+- `tip`
 
 ## 5. 현재 동작 흐름
 
@@ -115,13 +133,39 @@
   "recommendations": [
     {
       "name": "대파 삼겹살 볶음",
-      "reason": "소주의 알싸한 맛과 잘 어울리고, 기름진 고기 풍미를 대파가 깔끔하게 잡아줍니다.",
-      "recipe": [
-        "1: 대파를 길게 썹니다",
-        "2: 삼겹살을 노릇하게 굽습니다",
-        "3: 대파와 함께 볶아 간을 맞춥니다"
+      "reason": "소주의 알싸한 맛과 기름진 돼지고기 풍미가 잘 맞고, 대파가 느끼함을 깔끔하게 눌러줍니다.",
+      "servings": 1,
+      "cook_time_minutes": 15,
+      "difficulty": "easy",
+      "ingredient_details": [
+        {
+          "item_name": "green_onion",
+          "display_name": "대파",
+          "amount": 1,
+          "unit": "대",
+          "status": "available"
+        },
+        {
+          "item_name": "pork",
+          "display_name": "돼지고기",
+          "amount": 180,
+          "unit": "g",
+          "status": "missing"
+        }
       ],
-      "missing_ingredients": ["pork", "garlic", "oyster_sauce"]
+      "pantry_items": [
+        "식용유 1큰술",
+        "소금 약간",
+        "후추 약간"
+      ],
+      "recipe": [
+        "1: 대파 1대는 4~5cm 길이로 썬다, 돼지고기 180g은 한입 크기로 손질한다, 마늘 2쪽은 편썬다.",
+        "2: 팬에 기름을 두르고 돼지고기 180g을 먼저 2~3분 볶는다.",
+        "3: 대파, 마늘을 넣고 1~2분 더 볶아 간을 맞춘다.",
+        "4: 대파 삼겹살 볶음은 센 불에서 빠르게 마무리해 낸다."
+      ],
+      "missing_ingredients": ["pork", "garlic"],
+      "tip": "볶음류는 센 불에서 짧게 끝내야 재료 식감이 살아 있고 물이 덜 생깁니다."
     }
   ]
 }
@@ -131,8 +175,12 @@
 
 - 추천 카드 3개
 - 추천 이유 표시
+- 조리 시간 / 난이도 표시
+- 재료 체크리스트 UI
+- 상온 기본 양념 안내
 - 조리 순서 펼침 UI
 - 부족 재료 표시
+- 상세 레시피 모달 또는 상세 페이지
 
 ## 7. 권장 구조
 ```text
@@ -224,6 +272,7 @@ Jetson/AI 내부 입력용 API는 문서에서 숨겨져 있습니다.
 - 주류 SSE
 - 추천 SSE
 - 수동 주류 스캔 fallback
+- 로컬 FE(CORS) 연동
 - seed DB 기반 추천 3개 반환
 
 아직 안 된 것:
@@ -231,17 +280,16 @@ Jetson/AI 내부 입력용 API는 문서에서 숨겨져 있습니다.
 - 실제 Jetson 모델 실행을 통한 수동 스캔
 - 대규모 레시피 DB 자동 구축
 - 추천 결과 이력 저장
-- CORS
 - MySQL 전환
 
 ## 12. 다음 우선순위
 다음 개발 우선순위는 아래와 같습니다.
 
-1. CORS 추가
-2. MySQL 전환
-3. 레시피 후보 DB 확장
-4. LLM으로 레시피 후보 대량 생성 후 seed 정리
-5. Gemini structured output 연계
+1. MySQL 전환
+2. 레시피 후보 DB 확장
+3. LLM으로 레시피 후보 대량 생성 후 seed 정리
+4. Gemini structured output 연계
+5. 상세 레시피 전용 FE 화면/모달 연동
 6. Jetson 실제 인식 결과 연동
 
 ## 13. 주의 사항

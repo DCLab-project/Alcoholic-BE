@@ -45,6 +45,11 @@ class Recipe(Base):
     name: Mapped[str] = mapped_column(String(200))
     reason: Mapped[str] = mapped_column(Text)
     instructions_text: Mapped[str] = mapped_column(Text)
+    servings: Mapped[int] = mapped_column(Integer, default=1)
+    cook_time_minutes: Mapped[int] = mapped_column(Integer, default=15)
+    difficulty: Mapped[str] = mapped_column(String(20), default="easy")
+    pantry_items_text: Mapped[str] = mapped_column(Text, default="")
+    tip: Mapped[str] = mapped_column(Text, default="")
     rank_hint: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
 
@@ -60,5 +65,8 @@ class RecipeIngredient(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     recipe_id: Mapped[int] = mapped_column(ForeignKey("recipes.id"), index=True)
     ingredient_name: Mapped[str] = mapped_column(String(100), index=True)
+    display_name: Mapped[str] = mapped_column(String(100), default="")
+    amount: Mapped[float] = mapped_column(Float, default=1.0)
+    unit: Mapped[str] = mapped_column(String(20), default="개")
 
     recipe: Mapped["Recipe"] = relationship(back_populates="ingredients")
