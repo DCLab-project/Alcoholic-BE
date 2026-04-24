@@ -3,64 +3,130 @@
 ## 1. 저장소 목적
 이 저장소는 술안주 추천 AI 냉장고 프로젝트의 백엔드 서버를 담당합니다.
 
-현재 백엔드는 아래 역할을 중심으로 구현을 진행하고 있습니다.
+현재 백엔드는 프론트와 AI/Jetson 사이의 연결 지점을 먼저 안정적으로 만드는 데 초점을 두고 있습니다.
+즉, 지금 단계의 목표는 다음 3가지를 실제로 동작시키는 것입니다.
 
-- 식재료 재고 조회, 일괄 저장, 수량 수동 조절
-- 식재료/주류 실시간 감지 결과 스트리밍(SSE)
-- 프론트 UI 테스트를 위한 mock 추천 결과 제공
-- 이후 AI, DB, 추천 로직, LLM 연계를 위한 서버 구조 준비
+- 재고 저장, 조회, 수량 조절
+- 식재료 / 주류 실시간 SSE 스트림
+- 주류 인식 후 추천 결과 전달 흐름
 
 ## 2. 현재 구현된 기능
-현재 실제로 동작 확인이 끝난 기능은 아래와 같습니다.
 
-### 재고 관리
+### 재고 관리 API
 - `GET /api/v1/inventory`
 - `POST /api/v1/inventory/bulk`
 - `PATCH /api/v1/inventory/quantity`
 
-### 실시간 스트림(SSE)
+### 실시간 스트림 API
 - `GET /api/v1/stream/ingredients`
 - `GET /api/v1/stream/liquor`
 - `GET /api/v1/stream/recommendations`
 
-### 스캔 요청
+### 주류 수동 스캔 요청 API
 - `POST /api/v1/scan/liquor/start`
-
-### 내부 입력용 API
-아래 API는 Jetson/AI가 백엔드로 인식 결과를 보내는 내부용 API입니다.
-Swagger 문서에는 숨겨져 있습니다.
-
-- `POST /api/v1/recognitions/ingredients`
-- `POST /api/v1/recognitions/liquor`
 
 ### 추천 API
 - `GET /api/v1/recommendations?liquor=soju&refresh=false`
 
-현재 추천 API는 **프론트 UI 테스트를 위한 mock 추천 결과**를 반환합니다.
-실제 DB 점수화 로직, Gemini 연계, 추천 고도화는 아직 구현 전입니다.
+### 내부 입력용 API
+아래 API는 Jetson/AI가 백엔드로 인식 결과를 넣을 때 사용하는 내부용 API입니다.
+프론트 Swagger 문서에서는 숨겨져 있습니다.
 
-## 3. 현재 동작 흐름
-현재 구현 기준 흐름은 아래와 같습니다.
+- `POST /api/v1/recognitions/ingredients`
+- `POST /api/v1/recognitions/liquor`
 
-### 식재료
+## 3. 현재 추천 시스템 구조
+현재 추천은 더 이상 단순 하드코딩 리스트만 반환하지 않습니다.
+아래 구조로 동작합니다.
+
+1. seed 레시피 데이터를 DB에 적재
+2. 현재 재고(`inventory_items`) 조회
+3. 주류별 후보 레시피 조회
+4. 현재 재고 기준으로 부족 재료 계산
+5. 간단한 점수화 후 상위 3개 추천 반환
+
+즉 현재 추천은 **DB seed + 재고 기반 점수화 추천의 첫 버전**입니다.
+
+다만 아직 아래는 구현 전입니다.
+
+- Gemini / LLM 실제 호출
+- 대규모 레시피 카탈로그 자동 생성
+- 추천 이유 자동 생성/보완
+- 추천 히스토리 저장
+
+## 4. 레시피 seed 데이터
+현재 추천 후보 레시피 seed 데이터는 아래 파일에 들어 있습니다.
+
+- `seeds/recommendations.json`
+
+이 파일은 이후 LLM으로 대량 생성한 레시피 후보를 사람이 검수한 뒤 넣는 출발점으로 사용할 수 있게 구성했습니다.
+
+현재는 예시로 아래 주류 seed가 들어 있습니다.
+
+- `soju`
+- `beer`
+
+각 레시피에는 아래 정보가 저장됩니다.
+
+- 추천 대상 주류
+- 추천 이름
+- 추천 이유
+- 조리 순서
+- 필요 재료 목록
+- refresh용 보조 세트 구분값
+
+## 5. 현재 동작 흐름
+
+### 식재료 인식 흐름
 1. Jetson/AI가 식재료 인식 결과를 내부 API로 전송
-2. 백엔드가 식재료 SSE 스트림으로 프론트에 실시간 전달
-3. 프론트는 임시 리스트에 표시
+2. 백엔드가 `ingredient` SSE를 발행
+3. 프론트는 임시 리스트 UI에 식재료를 쌓음
 4. 사용자가 저장 버튼을 누르면 `inventory/bulk`로 최종 저장
 
-### 주류
+### 자동 주류 인식 흐름
 1. Jetson/AI가 주류 인식 결과를 내부 API로 전송
-2. 백엔드가 `liquor` SSE 스트림으로 주류 이름을 즉시 전달
-3. 약간의 지연 후 `recommendation` SSE 스트림으로 추천 결과를 전달
+2. 백엔드가 `liquor` SSE를 먼저 발행
+3. 그 뒤 추천 로직이 실행됨
+4. 약간의 지연 후 `recommendation` SSE를 발행
 
-### 주류 수동 스캔 요청
-1. 프론트가 `POST /api/v1/scan/liquor/start`로 스캔 시작 요청
-2. 백엔드가 `accepted` 응답과 `scan_request_id`를 먼저 반환
-3. 이후 mock 스캔 흐름이 실행되며 약 3초 뒤 `liquor` SSE, 그 다음 약간의 지연 후 `recommendation` SSE를 순차적으로 발행
+### 수동 주류 스캔 fallback 흐름
+1. 프론트가 `POST /api/v1/scan/liquor/start` 호출
+2. 백엔드가 `accepted`와 `scan_request_id`를 먼저 반환
+3. mock 수동 스캔 흐름이 약 3초 뒤 `soju`를 인식한 것으로 처리
+4. `liquor` SSE를 발행
+5. 이후 추천 로직을 실행하고 `recommendation` SSE를 발행
 
-즉 현재 프론트는 **SSE를 구독만 하고 있어도** 술 이름과 추천 결과를 순차적으로 받을 수 있습니다.
+즉 현재 프론트는 자동 인식 실패 시에도 버튼 기반 fallback UI를 먼저 테스트할 수 있습니다.
 
-## 4. 권장 구조
+## 6. 추천 응답 형식
+현재 프론트와 맞춰진 추천 응답 형식은 아래와 같습니다.
+
+```json
+{
+  "liquor": "soju",
+  "recommendations": [
+    {
+      "name": "대파 삼겹살 볶음",
+      "reason": "소주의 알싸한 맛과 잘 어울리고, 기름진 고기 풍미를 대파가 깔끔하게 잡아줍니다.",
+      "recipe": [
+        "1: 대파를 길게 썹니다",
+        "2: 삼겹살을 노릇하게 굽습니다",
+        "3: 대파와 함께 볶아 간을 맞춥니다"
+      ],
+      "missing_ingredients": ["pork", "garlic", "oyster_sauce"]
+    }
+  ]
+}
+```
+
+이 구조 덕분에 프론트는 아래 UI를 바로 구성할 수 있습니다.
+
+- 추천 카드 3개
+- 추천 이유 표시
+- 조리 순서 펼침 UI
+- 부족 재료 표시
+
+## 7. 권장 구조
 ```text
 app/
   api/
@@ -70,18 +136,23 @@ app/
   repositories/
   schemas/
   services/
+  seeds/
+seeds/
+  recommendations.json
 ```
 
-각 계층 역할은 다음과 같습니다.
+역할은 아래처럼 나누고 있습니다.
 
-- `api/`: 요청/응답 라우팅
-- `schemas/`: 요청/응답 스키마, validation
-- `services/`: 실제 비즈니스 로직
+- `api/`: FastAPI 라우트
+- `schemas/`: 요청/응답 스키마
+- `services/`: 비즈니스 로직
 - `repositories/`: DB 접근
 - `domain/`: SQLAlchemy 모델
-- `config/`: 설정값 관리
+- `app/seeds/`: seed 적재 코드
+- `seeds/`: 레시피 seed 원본 데이터
 
-## 5. 실행 방법
+## 8. 실행 방법
+
 ### 1. 가상환경 생성
 ```bash
 python -m venv .venv
@@ -105,82 +176,68 @@ Copy-Item .env.example .env
 ```
 
 ### 5. 서버 실행
-로컬 단독 테스트:
+로컬 테스트:
 
 ```bash
 uvicorn app.main:app --reload
 ```
 
-같은 네트워크의 다른 PC에서 프론트가 붙어야 할 때:
+같은 네트워크의 다른 PC에서 프론트가 붙을 때:
 
 ```bash
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-## 6. Swagger 문서
+## 9. Swagger 문서
 서버 실행 후 아래 주소에서 Swagger 문서를 확인할 수 있습니다.
 
 - 로컬: `http://127.0.0.1:8000/docs`
-- 같은 네트워크 테스트 시: `http://<내_IP>:8000/docs`
+- 같은 네트워크 테스트: `http://<내_IP>:8000/docs`
 
-Swagger에는 **프론트가 직접 사용하는 API 중심**으로 문서를 노출합니다.
-Jetson/AI 내부 입력용 API는 문서에서 숨깁니다.
+Swagger에는 **프론트가 직접 사용하는 API 중심**으로 문서가 보이도록 정리해두었습니다.
+Jetson/AI 내부 입력용 API는 문서에서 숨겨져 있습니다.
 
-## 7. 주요 API 요약
-### 상태 확인
-- `GET /health`
-
-### 재고 관리
-- `GET /api/v1/inventory`
-- `POST /api/v1/inventory/bulk`
-- `PATCH /api/v1/inventory/quantity`
-
-### 실시간 스트림
-- `GET /api/v1/stream/ingredients`
-- `GET /api/v1/stream/liquor`
-- `GET /api/v1/stream/recommendations`
-
-### 스캔 요청
-- `POST /api/v1/scan/liquor/start`
-
-### 추천
-- `GET /api/v1/recommendations?liquor=soju&refresh=false`
-
-### 내부 입력용
-- `POST /api/v1/recognitions/ingredients`
-- `POST /api/v1/recognitions/liquor`
-
-## 8. 데이터 저장 관련
-현재 기본 설정은 빠른 개발을 위해 SQLite를 사용합니다.
+## 10. 데이터베이스
+현재 기본 설정은 SQLite입니다.
 
 - 기본값: `sqlite:///./alcoholic.db`
 
-향후 팀 기준 운영 흐름에 맞춰 MySQL로 전환할 예정입니다.
-현재 코드 구조는 SQLAlchemy 계층을 분리해 두었기 때문에 MySQL 전환이 가능하도록 작성되어 있습니다.
+즉 지금은 빠른 개발과 프론트 연동 테스트를 위해 파일 DB를 사용합니다.
+이후 팀 기준 구조에 맞춰 MySQL로 전환할 예정입니다.
 
-## 9. 현재 mock 상태인 부분
-아래는 아직 실제 구현이 아니라 테스트용 mock 또는 임시 흐름입니다.
+현재 코드는 SQLAlchemy 계층을 분리해두었기 때문에, 다음 단계에서 MySQL 전환이 가능하도록 준비돼 있습니다.
 
-- 추천 결과 3종
-- 추천 이유
-- 레시피 단계
-- 부족 재료 목록
-- 주류 인식 후 추천 결과 자동 전달 흐름의 세부 정책
+## 11. 현재 구현 상태에서 정직하게 말할 것
+현재 구현은 “기초 통합 테스트가 되는 상태”입니다.
 
-즉 현재 추천 파트는 **프론트 UI와 통신 흐름 검증용**입니다.
+이미 되는 것:
+- 재고 조회 / 일괄 저장 / 수량 조절
+- 식재료 SSE
+- 주류 SSE
+- 추천 SSE
+- 수동 주류 스캔 fallback
+- seed DB 기반 추천 3개 반환
 
-## 10. 다음 개발 우선순위
-다음 우선순위는 아래와 같습니다.
+아직 안 된 것:
+- 실제 Gemini / LLM 추천 생성
+- 실제 Jetson 모델 실행을 통한 수동 스캔
+- 대규모 레시피 DB 자동 구축
+- 추천 결과 이력 저장
+- CORS
+- MySQL 전환
 
-1. CORS 설정 추가
+## 12. 다음 우선순위
+다음 개발 우선순위는 아래와 같습니다.
+
+1. CORS 추가
 2. MySQL 전환
-3. 재고/이벤트 구조 안정화
-4. 추천 로직 DB 우선 + 점수화 구조 반영
+3. 레시피 후보 DB 확장
+4. LLM으로 레시피 후보 대량 생성 후 seed 정리
 5. Gemini structured output 연계
-6. Jetson 실제 추론 결과와 완전 연동
+6. Jetson 실제 인식 결과 연동
 
-## 11. 주의 사항
-- 현재 카메라/AI 인식 결과는 영어 key 기준으로 통일합니다.
+## 13. 주의 사항
+- 내부 key는 영어 기준으로 통일합니다.
   - 예: `green_onion`, `onion`, `soju`
-- 프론트 화면 표시 한글은 FE에서 매핑하는 방식을 권장합니다.
-- raw 데이터, 체크포인트, 로그, 산출물은 Git에 올리지 않습니다.
+- 프론트 화면 표시는 필요할 때 별도 한글 매핑으로 처리하는 방식을 권장합니다.
+- 추천 이유(`reason`)와 조리 순서(`recipe`)는 DB seed에 포함되며, 사용자가 확인할 수 있도록 응답에서 유지합니다.

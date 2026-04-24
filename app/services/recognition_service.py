@@ -1,6 +1,7 @@
 import asyncio
 from datetime import datetime, timezone
 
+from app.db import SessionLocal
 from app.schemas.recognition import (
     IngredientLiveRecognitionCreate,
     IngredientStreamEvent,
@@ -72,12 +73,16 @@ class RecognitionService:
         await self.publish_liquor_live_result(payload)
 
     async def _publish_recommendation_event(self, liquor_name: str) -> None:
-        recommendation_service = RecommendationService()
-        recommendations = await asyncio.to_thread(
-            recommendation_service.get_recommendations,
-            liquor_name,
-            False,
-        )
-        await recommendation_event_broker.publish(
-            recommendations.model_dump(mode="json")
-        )
+        db = SessionLocal()
+        try:
+            recommendation_service = RecommendationService(db)
+            recommendations = await asyncio.to_thread(
+                recommendation_service.get_recommendations,
+                liquor_name,
+                False,
+            )
+            await recommendation_event_broker.publish(
+                recommendations.model_dump(mode="json")
+            )
+        finally:
+            db.close()

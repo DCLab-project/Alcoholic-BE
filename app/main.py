@@ -4,7 +4,8 @@ from fastapi import FastAPI
 
 from app.api.router import api_router
 from app.config.settings import get_settings
-from app.db import Base, engine
+from app.db import Base, SessionLocal, engine
+from app.seeds.recommendation_seed import seed_recommendation_data
 
 settings = get_settings()
 
@@ -31,6 +32,11 @@ openapi_tags = [
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     Base.metadata.create_all(bind=engine)
+    db = SessionLocal()
+    try:
+        seed_recommendation_data(db)
+    finally:
+        db.close()
     yield
 
 
