@@ -101,6 +101,12 @@
 - `pantry_items`
 - `tip`
 
+로컬 FE 테스트용으로 냉장고 재고를 넉넉하게 채우고 싶을 때는 아래 스크립트를 사용합니다.
+
+- `scripts/seed_demo_inventory.py`
+
+이 스크립트는 현재 추천 후보와 식재료 클래스를 기준으로 로컬 SQLite 재고를 한 번에 채웁니다.
+
 ## 5. 현재 동작 흐름
 
 ### 식재료 인식 흐름
@@ -134,6 +140,19 @@
     {
       "name": "대파 삼겹살 볶음",
       "reason": "소주의 알싸한 맛과 기름진 돼지고기 풍미가 잘 맞고, 대파가 느끼함을 깔끔하게 눌러줍니다.",
+      "priority_rank": 1,
+      "priority_reason": "현재 재고만으로 바로 조리할 수 있으며 페어링 기본 점수도 높아 1순위로 선정했습니다.",
+      "selection_factors": [
+        "핵심 재료 3개 중 3개를 현재 재고로 바로 활용할 수 있습니다.",
+        "추가 장보기 없이 바로 조리 가능한 레시피입니다.",
+        "기본 주류 페어링 우선순위가 매우 높은 레시피입니다."
+      ],
+      "score_breakdown": {
+        "available_ingredient_count": 3,
+        "missing_ingredient_count": 0,
+        "rank_hint": 95,
+        "total_score": 104
+      },
       "servings": 1,
       "cook_time_minutes": 15,
       "difficulty": "easy",
@@ -175,6 +194,8 @@
 
 - 추천 카드 3개
 - 추천 이유 표시
+- 추천 우선순위 설명
+- 추천 선택 요인 표시
 - 조리 시간 / 난이도 표시
 - 재료 체크리스트 UI
 - 상온 기본 양념 안내

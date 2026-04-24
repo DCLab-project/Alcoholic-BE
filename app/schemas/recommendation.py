@@ -9,9 +9,22 @@ class RecommendationIngredientDetail(BaseModel):
     status: str = Field(description="현재 재고 기준 보유 여부")
 
 
+class RecommendationScoreBreakdown(BaseModel):
+    available_ingredient_count: int = Field(description="현재 재고에서 바로 활용 가능한 핵심 재료 수")
+    missing_ingredient_count: int = Field(description="추가 구매가 필요한 핵심 재료 수")
+    rank_hint: int = Field(description="기본 레시피 우선순위 힌트 값")
+    total_score: int = Field(description="현재 추천 정렬에 사용된 총점")
+
+
 class RecommendationItem(BaseModel):
     name: str = Field(description="추천 안주 이름")
     reason: str = Field(description="해당 안주를 추천하는 이유")
+    priority_rank: int = Field(description="현재 추천 결과 내 우선순위")
+    priority_reason: str = Field(description="이 안주가 현재 순위로 선택된 이유")
+    selection_factors: list[str] = Field(description="우선순위 산정에 반영된 핵심 요인")
+    score_breakdown: RecommendationScoreBreakdown = Field(
+        description="추천 우선순위 산정에 사용된 점수 구성"
+    )
     servings: int = Field(description="기준 인분 수")
     cook_time_minutes: int = Field(description="예상 조리 시간(분)")
     difficulty: str = Field(description="조리 난이도")
