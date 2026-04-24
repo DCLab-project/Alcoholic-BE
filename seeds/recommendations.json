@@ -3,35 +3,61 @@
     {
       "liquor_name": "soju",
       "refresh_group": 0,
-      "rank_hint": 90,
+      "rank_hint": 95,
       "name": "대파 삼겹살 볶음",
-      "reason": "소주의 알싸한 맛과 잘 어울리고, 기름진 고기 풍미를 대파가 깔끔하게 잡아줍니다.",
+      "reason": "소주의 알싸한 맛과 기름진 돼지고기 풍미가 잘 맞고, 대파가 느끼함을 깔끔하게 눌러줍니다.",
       "recipe": [
-        "1: 대파를 길게 썹니다",
-        "2: 삼겹살을 노릇하게 굽습니다",
-        "3: 대파와 함께 볶아 간을 맞춥니다"
+        "1: 대파와 마늘을 손질합니다",
+        "2: 돼지고기를 먼저 노릇하게 볶습니다",
+        "3: 대파를 넣고 빠르게 마무리합니다"
       ],
-      "ingredients": ["green_onion", "pork", "garlic", "oyster_sauce"]
+      "ingredients": ["green_onion", "pork", "garlic"]
     },
     {
       "liquor_name": "soju",
       "refresh_group": 0,
-      "rank_hint": 80,
-      "name": "양파 참치전",
-      "reason": "담백한 참치전이 소주의 쓴맛을 덜어주고, 양파의 단맛이 전체 균형을 잡아줍니다.",
+      "rank_hint": 90,
+      "name": "양파 달걀전",
+      "reason": "부드러운 달걀전과 양파의 단맛이 소주의 강한 맛을 편하게 받아줍니다.",
       "recipe": [
-        "1: 양파를 잘게 썹니다",
-        "2: 참치와 반죽 재료를 섞습니다",
+        "1: 양파를 얇게 썹니다",
+        "2: 달걀과 섞어 반죽을 만듭니다",
         "3: 팬에 노릇하게 부칩니다"
       ],
-      "ingredients": ["onion", "tuna", "flour", "egg"]
+      "ingredients": ["onion", "egg", "green_onion"]
     },
     {
       "liquor_name": "soju",
       "refresh_group": 0,
-      "rank_hint": 70,
+      "rank_hint": 86,
+      "name": "오이 소시지무침",
+      "reason": "아삭한 오이와 짭짤한 소시지가 소주 안주로 부담 없이 잘 어울립니다.",
+      "recipe": [
+        "1: 오이와 소시지를 한입 크기로 썹니다",
+        "2: 소시지를 먼저 살짝 익힙니다",
+        "3: 오이와 함께 가볍게 버무립니다"
+      ],
+      "ingredients": ["cucumber", "sausage", "onion"]
+    },
+    {
+      "liquor_name": "soju",
+      "refresh_group": 0,
+      "rank_hint": 84,
+      "name": "감자 베이컨볶음",
+      "reason": "짭짤한 베이컨과 포만감 있는 감자가 소주와 함께 먹기 좋은 기본 안주가 됩니다.",
+      "recipe": [
+        "1: 감자와 베이컨을 먹기 좋게 썹니다",
+        "2: 감자를 먼저 익힙니다",
+        "3: 베이컨과 양파를 넣고 함께 볶습니다"
+      ],
+      "ingredients": ["potato", "bacon", "onion"]
+    },
+    {
+      "liquor_name": "soju",
+      "refresh_group": 0,
+      "rank_hint": 82,
       "name": "토마토 달걀볶음",
-      "reason": "새콤한 토마토가 소주의 무게감을 줄여주고, 달걀의 부드러움이 부담을 낮춰줍니다.",
+      "reason": "새콤한 토마토가 소주의 무게감을 줄여주고 달걀의 부드러움이 균형을 맞춰줍니다.",
       "recipe": [
         "1: 토마토를 큼직하게 썹니다",
         "2: 달걀을 스크램블합니다",
@@ -42,90 +68,143 @@
     {
       "liquor_name": "soju",
       "refresh_group": 1,
-      "rank_hint": 90,
-      "name": "감자 버터구이",
-      "reason": "짭짤하고 고소한 감자 버터구이가 소주와 함께 먹기 편하고 무난한 안주가 됩니다.",
+      "rank_hint": 93,
+      "name": "버섯 제육볶음",
+      "reason": "돼지고기와 버섯의 진한 풍미가 소주의 직선적인 맛을 잘 받아주고 만족감이 큽니다.",
       "recipe": [
-        "1: 감자를 삶아 한입 크기로 자릅니다",
-        "2: 버터를 두른 팬에 감자를 굽습니다",
-        "3: 소금과 후추로 간을 맞춥니다"
+        "1: 돼지고기와 버섯을 손질합니다",
+        "2: 고기를 먼저 볶아 기름을 냅니다",
+        "3: 버섯과 양파를 넣고 함께 볶습니다"
       ],
-      "ingredients": ["potato", "butter"]
+      "ingredients": ["pork", "mushroom", "onion"]
+    },
+    {
+      "liquor_name": "soju",
+      "refresh_group": 1,
+      "rank_hint": 88,
+      "name": "애호박 양파전",
+      "reason": "애호박의 수분감과 양파의 단맛 덕분에 소주와 곁들이기 편한 가벼운 안주가 됩니다.",
+      "recipe": [
+        "1: 애호박과 양파를 채 썹니다",
+        "2: 달걀과 함께 반죽합니다",
+        "3: 팬에 얇게 부쳐냅니다"
+      ],
+      "ingredients": ["zucchini", "onion", "egg"]
+    },
+    {
+      "liquor_name": "soju",
+      "refresh_group": 1,
+      "rank_hint": 86,
+      "name": "소시지 감자볶음",
+      "reason": "짭짤한 소시지와 감자의 익숙한 조합이 소주와 무난하게 잘 맞습니다.",
+      "recipe": [
+        "1: 소시지와 감자를 썹니다",
+        "2: 감자를 먼저 익힙니다",
+        "3: 소시지와 양파를 넣고 마무리합니다"
+      ],
+      "ingredients": ["sausage", "potato", "onion"]
+    },
+    {
+      "liquor_name": "soju",
+      "refresh_group": 1,
+      "rank_hint": 84,
+      "name": "양배추 돼지고기볶음",
+      "reason": "달큰한 양배추가 돼지고기의 무게감을 잡아줘 소주와 함께 먹기 좋은 볶음 안주가 됩니다.",
+      "recipe": [
+        "1: 양배추와 돼지고기를 손질합니다",
+        "2: 고기를 먼저 볶습니다",
+        "3: 양배추와 대파를 넣고 빠르게 마무리합니다"
+      ],
+      "ingredients": ["cabbage", "pork", "green_onion"]
     },
     {
       "liquor_name": "soju",
       "refresh_group": 1,
       "rank_hint": 80,
-      "name": "오이 무침",
-      "reason": "상큼한 오이 무침은 소주와 먹을 때 입안을 깔끔하게 정리해주는 역할을 합니다.",
+      "name": "오이 양파무침",
+      "reason": "상큼한 오이와 양파는 소주의 텁텁함을 정리해주는 가장 기본적인 조합입니다.",
       "recipe": [
-        "1: 오이를 얇게 썹니다",
-        "2: 고춧가루와 식초를 넣어 버무립니다",
-        "3: 차갑게 두었다가 바로 냅니다"
+        "1: 오이와 양파를 얇게 썹니다",
+        "2: 물기를 가볍게 정리합니다",
+        "3: 대파를 더해 버무립니다"
       ],
-      "ingredients": ["cucumber", "gochugaru", "vinegar"]
+      "ingredients": ["cucumber", "onion", "green_onion"]
     },
-    {
-      "liquor_name": "soju",
-      "refresh_group": 1,
-      "rank_hint": 70,
-      "name": "소시지 채소볶음",
-      "reason": "짭짤한 소시지와 채소 볶음은 소주와 가장 무난하게 잘 붙는 기본 안주 조합입니다.",
-      "recipe": [
-        "1: 소시지와 채소를 먹기 좋게 썹니다",
-        "2: 팬에 함께 볶습니다",
-        "3: 케첩이나 간장으로 마무리합니다"
-      ],
-      "ingredients": ["sausage", "onion", "pepper", "ketchup"]
-    },
+
     {
       "liquor_name": "beer",
       "refresh_group": 0,
-      "rank_hint": 90,
+      "rank_hint": 95,
       "name": "감자 치즈구이",
-      "reason": "맥주의 탄산감과 감자 치즈구이의 고소한 맛이 잘 어울려 부담 없이 즐기기 좋습니다.",
+      "reason": "맥주의 탄산감과 감자 치즈구이의 고소한 맛이 잘 어울려 가장 대중적인 맥주 안주가 됩니다.",
       "recipe": [
         "1: 감자를 얇게 썹니다",
-        "2: 치즈와 함께 오븐이나 팬에 익힙니다",
-        "3: 노릇해지면 바로 냅니다"
+        "2: 치즈를 올려 함께 익힙니다",
+        "3: 노릇하게 구워 바로 냅니다"
       ],
       "ingredients": ["potato", "cheese", "butter"]
     },
     {
       "liquor_name": "beer",
       "refresh_group": 0,
-      "rank_hint": 80,
-      "name": "소시지 감자볶음",
-      "reason": "짭짤한 소시지와 포만감 있는 감자가 맥주와 함께 먹기 좋은 기본 안주 조합입니다.",
+      "rank_hint": 90,
+      "name": "소시지 브로콜리볶음",
+      "reason": "짭짤한 소시지와 브로콜리의 조합은 맥주와 함께 먹기 좋고 준비도 간단합니다.",
       "recipe": [
-        "1: 소시지와 감자를 썹니다",
-        "2: 팬에 감자를 먼저 익힙니다",
-        "3: 소시지를 넣고 함께 볶습니다"
+        "1: 소시지와 브로콜리를 손질합니다",
+        "2: 소시지를 먼저 익힙니다",
+        "3: 브로콜리와 양파를 넣고 볶습니다"
       ],
-      "ingredients": ["sausage", "potato", "onion"]
+      "ingredients": ["sausage", "broccoli", "onion"]
     },
     {
       "liquor_name": "beer",
       "refresh_group": 0,
-      "rank_hint": 70,
-      "name": "오이 요거트 샐러드",
-      "reason": "맥주의 무게감을 오이와 요거트가 가볍게 풀어줘서 산뜻하게 즐길 수 있습니다.",
+      "rank_hint": 88,
+      "name": "베이컨 감자전",
+      "reason": "바삭한 식감과 짭짤한 풍미가 맥주의 청량감과 잘 맞습니다.",
       "recipe": [
-        "1: 오이를 얇게 썹니다",
-        "2: 요거트와 소금을 섞어 드레싱을 만듭니다",
-        "3: 함께 버무려 차갑게 냅니다"
+        "1: 감자를 채 썹니다",
+        "2: 베이컨과 달걀을 섞어 반죽합니다",
+        "3: 팬에 넓게 부쳐 바삭하게 익힙니다"
       ],
-      "ingredients": ["cucumber", "yogurt", "onion"]
+      "ingredients": ["bacon", "potato", "egg"]
+    },
+    {
+      "liquor_name": "beer",
+      "refresh_group": 0,
+      "rank_hint": 85,
+      "name": "치킨 양파볶음",
+      "reason": "닭고기와 양파의 단짠 조합이 맥주와 함께 먹기 무난하고 포만감도 좋습니다.",
+      "recipe": [
+        "1: 닭고기와 양파를 손질합니다",
+        "2: 닭고기를 먼저 익힙니다",
+        "3: 양파와 후추를 넣고 마무리합니다"
+      ],
+      "ingredients": ["chicken", "onion", "pepper"]
+    },
+    {
+      "liquor_name": "beer",
+      "refresh_group": 0,
+      "rank_hint": 82,
+      "name": "토마토 치즈토스트",
+      "reason": "토마토의 산뜻함과 치즈의 고소함이 맥주 안주로 가볍게 잘 어울립니다.",
+      "recipe": [
+        "1: 빵 위에 토마토를 올립니다",
+        "2: 치즈를 얹어 구워냅니다",
+        "3: 한입 크기로 잘라 냅니다"
+      ],
+      "ingredients": ["bread", "tomato", "cheese"]
     },
     {
       "liquor_name": "beer",
       "refresh_group": 1,
-      "rank_hint": 90,
-      "name": "버터 브로콜리 볶음",
-      "reason": "버터 향을 입힌 브로콜리는 맥주와 함께 먹기 좋고, 비교적 가볍게 준비할 수 있습니다.",
+      "rank_hint": 94,
+      "name": "버터 브로콜리볶음",
+      "reason": "버터 향을 입힌 브로콜리는 맥주와 함께 먹기 좋고 비교적 가볍게 즐길 수 있습니다.",
       "recipe": [
-        "1: 브로콜리를 한입 크기로 손질합니다",
-        "2: 버터와 마늘을 팬에 녹입니다",
+        "1: 브로콜리를 한입 크기로 나눕니다",
+        "2: 버터에 마늘 향을 냅니다",
         "3: 브로콜리를 넣고 빠르게 볶습니다"
       ],
       "ingredients": ["broccoli", "butter", "garlic"]
@@ -133,28 +212,709 @@
     {
       "liquor_name": "beer",
       "refresh_group": 1,
-      "rank_hint": 80,
-      "name": "토마토 치즈 샐러드",
-      "reason": "토마토의 산뜻함과 치즈의 고소함이 맥주와 무난하게 잘 어울립니다.",
+      "rank_hint": 89,
+      "name": "베이컨 브레드오픈토스트",
+      "reason": "베이컨과 치즈의 진한 맛이 맥주와 잘 맞고, 빵이 전체 식감을 안정적으로 잡아줍니다.",
       "recipe": [
-        "1: 토마토를 썹니다",
-        "2: 치즈를 곁들입니다",
-        "3: 가볍게 간을 맞춰 냅니다"
+        "1: 빵과 베이컨을 준비합니다",
+        "2: 치즈와 토마토를 올립니다",
+        "3: 노릇하게 구워냅니다"
       ],
-      "ingredients": ["tomato", "cheese", "onion"]
+      "ingredients": ["bacon", "bread", "cheese", "tomato"]
     },
     {
       "liquor_name": "beer",
       "refresh_group": 1,
-      "rank_hint": 70,
-      "name": "치킨 양파볶음",
-      "reason": "닭고기와 양파의 단짠 조합이 맥주와 잘 맞고 한 끼 느낌으로도 즐길 수 있습니다.",
+      "rank_hint": 86,
+      "name": "감자 소시지구이",
+      "reason": "감자와 소시지의 익숙한 조합은 맥주와 함께 먹을 때 가장 실패가 적은 안주입니다.",
       "recipe": [
-        "1: 닭고기와 양파를 썹니다",
-        "2: 닭고기를 먼저 익힙니다",
-        "3: 양파와 후추를 넣어 마무리합니다"
+        "1: 감자와 소시지를 큼직하게 썹니다",
+        "2: 감자를 먼저 익힙니다",
+        "3: 소시지와 후추를 더해 마무리합니다"
       ],
-      "ingredients": ["chicken", "onion", "pepper"]
+      "ingredients": ["potato", "sausage", "pepper"]
+    },
+    {
+      "liquor_name": "beer",
+      "refresh_group": 1,
+      "rank_hint": 83,
+      "name": "오이 요거트샐러드",
+      "reason": "시원한 오이와 요거트가 맥주와 함께 먹을 때 입안을 산뜻하게 정리해줍니다.",
+      "recipe": [
+        "1: 오이를 얇게 썹니다",
+        "2: 요거트를 준비합니다",
+        "3: 양파를 더해 가볍게 버무립니다"
+      ],
+      "ingredients": ["cucumber", "yogurt", "onion"]
+    },
+    {
+      "liquor_name": "beer",
+      "refresh_group": 1,
+      "rank_hint": 80,
+      "name": "닭가슴살 샐러드",
+      "reason": "닭고기의 담백함과 채소의 가벼움이 맥주와 곁들이기 좋은 균형을 만듭니다.",
+      "recipe": [
+        "1: 닭고기를 익혀 찢습니다",
+        "2: 양상추와 토마토를 손질합니다",
+        "3: 함께 섞어 바로 냅니다"
+      ],
+      "ingredients": ["chicken", "lettuce", "tomato"]
+    },
+
+    {
+      "liquor_name": "white_wine",
+      "refresh_group": 0,
+      "rank_hint": 95,
+      "name": "토마토 치즈샐러드",
+      "reason": "산뜻한 토마토와 치즈의 조합은 화이트와인의 산미와 가장 무난하게 잘 어울립니다.",
+      "recipe": [
+        "1: 토마토와 양상추를 손질합니다",
+        "2: 치즈를 먹기 좋게 준비합니다",
+        "3: 가볍게 섞어 바로 냅니다"
+      ],
+      "ingredients": ["tomato", "cheese", "lettuce"]
+    },
+    {
+      "liquor_name": "white_wine",
+      "refresh_group": 0,
+      "rank_hint": 92,
+      "name": "생선 버터구이",
+      "reason": "담백한 생선과 버터 향은 화이트와인의 깔끔한 향과 잘 맞는 정석적인 조합입니다.",
+      "recipe": [
+        "1: 생선을 손질합니다",
+        "2: 버터에 마늘 향을 냅니다",
+        "3: 생선을 노릇하게 구워냅니다"
+      ],
+      "ingredients": ["fish", "butter", "garlic"]
+    },
+    {
+      "liquor_name": "white_wine",
+      "refresh_group": 0,
+      "rank_hint": 88,
+      "name": "오이 요거트딥",
+      "reason": "오이의 수분감과 요거트의 산뜻함이 화이트와인과 가볍게 잘 어울립니다.",
+      "recipe": [
+        "1: 오이를 잘게 다집니다",
+        "2: 요거트와 함께 섞습니다",
+        "3: 차갑게 두었다가 냅니다"
+      ],
+      "ingredients": ["cucumber", "yogurt"]
+    },
+    {
+      "liquor_name": "white_wine",
+      "refresh_group": 0,
+      "rank_hint": 85,
+      "name": "브로콜리 치즈구이",
+      "reason": "브로콜리의 식감과 치즈의 고소함이 화이트와인의 산미를 자연스럽게 받쳐줍니다.",
+      "recipe": [
+        "1: 브로콜리를 데치듯 준비합니다",
+        "2: 치즈를 올려 함께 익힙니다",
+        "3: 노릇해지면 바로 냅니다"
+      ],
+      "ingredients": ["broccoli", "cheese", "butter"]
+    },
+    {
+      "liquor_name": "white_wine",
+      "refresh_group": 0,
+      "rank_hint": 82,
+      "name": "닭고기 토마토스튜",
+      "reason": "토마토의 산미와 닭고기의 부드러운 맛이 화이트와인과 편안하게 어울립니다.",
+      "recipe": [
+        "1: 닭고기와 양파를 손질합니다",
+        "2: 닭고기를 먼저 익힙니다",
+        "3: 토마토를 넣고 짧게 끓입니다"
+      ],
+      "ingredients": ["chicken", "tomato", "onion"]
+    },
+    {
+      "liquor_name": "white_wine",
+      "refresh_group": 1,
+      "rank_hint": 94,
+      "name": "양상추 오이샐러드",
+      "reason": "가볍고 시원한 채소 조합은 화이트와인을 산뜻하게 즐기고 싶을 때 잘 맞습니다.",
+      "recipe": [
+        "1: 양상추와 오이를 손질합니다",
+        "2: 토마토를 함께 준비합니다",
+        "3: 차갑게 담아 바로 냅니다"
+      ],
+      "ingredients": ["lettuce", "cucumber", "tomato"]
+    },
+    {
+      "liquor_name": "white_wine",
+      "refresh_group": 1,
+      "rank_hint": 89,
+      "name": "애호박 치즈구이",
+      "reason": "애호박의 부드러운 단맛과 치즈의 고소함이 화이트와인과 잘 어울립니다.",
+      "recipe": [
+        "1: 애호박을 길게 썹니다",
+        "2: 치즈를 올려 함께 익힙니다",
+        "3: 부드럽게 구워 바로 냅니다"
+      ],
+      "ingredients": ["zucchini", "cheese"]
+    },
+    {
+      "liquor_name": "white_wine",
+      "refresh_group": 1,
+      "rank_hint": 86,
+      "name": "버섯 우유볶음",
+      "reason": "부드러운 우유 풍미와 버섯 향이 화이트와인의 가벼운 질감과 잘 맞습니다.",
+      "recipe": [
+        "1: 버섯과 양파를 손질합니다",
+        "2: 버섯을 먼저 볶습니다",
+        "3: 우유를 더해 짧게 마무리합니다"
+      ],
+      "ingredients": ["mushroom", "milk", "onion"]
+    },
+    {
+      "liquor_name": "white_wine",
+      "refresh_group": 1,
+      "rank_hint": 84,
+      "name": "생선 토마토구이",
+      "reason": "생선의 담백함과 토마토의 산미가 화이트와인과 가장 무난한 조합을 만듭니다.",
+      "recipe": [
+        "1: 생선과 토마토를 준비합니다",
+        "2: 양파를 깔고 함께 굽습니다",
+        "3: 익으면 바로 냅니다"
+      ],
+      "ingredients": ["fish", "tomato", "onion"]
+    },
+    {
+      "liquor_name": "white_wine",
+      "refresh_group": 1,
+      "rank_hint": 80,
+      "name": "당근 브로콜리볶음",
+      "reason": "당근과 브로콜리의 단정한 채소 풍미가 화이트와인과 잘 맞습니다.",
+      "recipe": [
+        "1: 당근과 브로콜리를 손질합니다",
+        "2: 버터에 가볍게 볶습니다",
+        "3: 식감이 남도록 마무리합니다"
+      ],
+      "ingredients": ["carrot", "broccoli", "butter"]
+    },
+
+    {
+      "liquor_name": "red_wine",
+      "refresh_group": 0,
+      "rank_hint": 96,
+      "name": "소고기 버섯볶음",
+      "reason": "붉은 육향과 버섯의 진한 풍미가 레드와인의 무게감과 가장 잘 맞는 조합입니다.",
+      "recipe": [
+        "1: 소고기와 버섯을 손질합니다",
+        "2: 소고기를 먼저 센 불에 익힙니다",
+        "3: 버섯과 양파를 넣고 마무리합니다"
+      ],
+      "ingredients": ["beef", "mushroom", "onion"]
+    },
+    {
+      "liquor_name": "red_wine",
+      "refresh_group": 0,
+      "rank_hint": 92,
+      "name": "토마토 비프스튜",
+      "reason": "토마토의 산미와 소고기의 깊은 맛이 레드와인의 구조감과 잘 어울립니다.",
+      "recipe": [
+        "1: 소고기와 양파를 손질합니다",
+        "2: 고기를 먼저 익힙니다",
+        "3: 토마토와 당근을 넣고 짧게 끓입니다"
+      ],
+      "ingredients": ["beef", "tomato", "onion", "carrot"]
+    },
+    {
+      "liquor_name": "red_wine",
+      "refresh_group": 0,
+      "rank_hint": 88,
+      "name": "가지 치즈구이",
+      "reason": "가지의 부드러운 식감과 치즈의 고소함이 레드와인의 부드러운 탄닌과 잘 맞습니다.",
+      "recipe": [
+        "1: 가지와 토마토를 썹니다",
+        "2: 치즈를 올려 함께 익힙니다",
+        "3: 부드럽게 구워냅니다"
+      ],
+      "ingredients": ["eggplant", "cheese", "tomato"]
+    },
+    {
+      "liquor_name": "red_wine",
+      "refresh_group": 0,
+      "rank_hint": 85,
+      "name": "버섯 베이컨볶음",
+      "reason": "버섯의 진한 향과 베이컨의 짭짤한 감칠맛이 레드와인을 더 풍부하게 느끼게 합니다.",
+      "recipe": [
+        "1: 버섯과 베이컨을 손질합니다",
+        "2: 베이컨을 먼저 익힙니다",
+        "3: 버섯과 양파를 넣고 볶습니다"
+      ],
+      "ingredients": ["mushroom", "bacon", "onion"]
+    },
+    {
+      "liquor_name": "red_wine",
+      "refresh_group": 0,
+      "rank_hint": 82,
+      "name": "양배추 소고기볶음",
+      "reason": "달큰한 양배추와 소고기의 조합이 레드와인의 무게감을 너무 무겁지 않게 받아줍니다.",
+      "recipe": [
+        "1: 양배추와 소고기를 손질합니다",
+        "2: 소고기를 먼저 볶습니다",
+        "3: 양배추와 양파를 넣고 마무리합니다"
+      ],
+      "ingredients": ["cabbage", "beef", "onion"]
+    },
+    {
+      "liquor_name": "red_wine",
+      "refresh_group": 1,
+      "rank_hint": 94,
+      "name": "버섯 치즈구이",
+      "reason": "버섯의 깊은 향과 녹진한 치즈 풍미가 레드와인의 진한 과실 향과 자연스럽게 이어집니다.",
+      "recipe": [
+        "1: 버섯과 양파를 손질합니다",
+        "2: 치즈를 올려 함께 익힙니다",
+        "3: 양파 향이 배도록 부드럽게 마무리합니다"
+      ],
+      "ingredients": ["mushroom", "cheese", "onion"]
+    },
+    {
+      "liquor_name": "red_wine",
+      "refresh_group": 1,
+      "rank_hint": 89,
+      "name": "소고기 감자구이",
+      "reason": "소고기와 감자의 단단한 조합은 레드와인의 무게감과 포만감을 함께 살려줍니다.",
+      "recipe": [
+        "1: 소고기와 감자를 손질합니다",
+        "2: 감자를 먼저 익힙니다",
+        "3: 소고기를 더해 함께 마무리합니다"
+      ],
+      "ingredients": ["beef", "potato", "onion"]
+    },
+    {
+      "liquor_name": "red_wine",
+      "refresh_group": 1,
+      "rank_hint": 86,
+      "name": "베이컨 토마토볶음",
+      "reason": "베이컨의 짭짤한 감칠맛과 토마토의 산미가 레드와인을 더 편하게 즐기게 해줍니다.",
+      "recipe": [
+        "1: 베이컨과 토마토를 손질합니다",
+        "2: 베이컨을 먼저 익혀 향을 냅니다",
+        "3: 토마토와 양파를 넣고 짧게 볶아냅니다"
+      ],
+      "ingredients": ["bacon", "tomato", "onion"]
+    },
+    {
+      "liquor_name": "red_wine",
+      "refresh_group": 1,
+      "rank_hint": 84,
+      "name": "가지 토마토볶음",
+      "reason": "가지의 부드러운 식감과 토마토의 산미가 레드와인의 진한 향을 정리해줍니다.",
+      "recipe": [
+        "1: 가지와 토마토를 손질합니다",
+        "2: 가지를 먼저 볶습니다",
+        "3: 토마토와 양파를 넣고 마무리합니다"
+      ],
+      "ingredients": ["eggplant", "tomato", "onion"]
+    },
+    {
+      "liquor_name": "red_wine",
+      "refresh_group": 1,
+      "rank_hint": 82,
+      "name": "버터 소고기양파볶음",
+      "reason": "버터 향과 소고기 풍미가 레드와인의 묵직한 질감과 자연스럽게 이어집니다.",
+      "recipe": [
+        "1: 소고기와 양파를 손질합니다",
+        "2: 버터에 양파를 먼저 볶습니다",
+        "3: 소고기를 넣고 빠르게 마무리합니다"
+      ],
+      "ingredients": ["beef", "onion", "butter"]
+    },
+
+    {
+      "liquor_name": "whisky",
+      "refresh_group": 0,
+      "rank_hint": 95,
+      "name": "베이컨 버터감자",
+      "reason": "짭짤한 베이컨과 버터감자의 고소한 풍미가 위스키의 스모키함과 잘 어울립니다.",
+      "recipe": [
+        "1: 감자와 베이컨을 손질합니다",
+        "2: 감자를 먼저 익힙니다",
+        "3: 베이컨과 버터를 넣고 마무리합니다"
+      ],
+      "ingredients": ["bacon", "potato", "butter"]
+    },
+    {
+      "liquor_name": "whisky",
+      "refresh_group": 0,
+      "rank_hint": 91,
+      "name": "치즈 버섯구이",
+      "reason": "버섯의 깊은 향과 치즈의 묵직한 고소함이 위스키와 잘 붙습니다.",
+      "recipe": [
+        "1: 버섯을 손질합니다",
+        "2: 치즈를 얹어 함께 익힙니다",
+        "3: 부드럽게 구워냅니다"
+      ],
+      "ingredients": ["cheese", "mushroom", "butter"]
+    },
+    {
+      "liquor_name": "whisky",
+      "refresh_group": 0,
+      "rank_hint": 88,
+      "name": "소고기 후추볶음",
+      "reason": "짙은 육향의 소고기 볶음은 위스키의 향과 정면으로 잘 맞는 강한 안주입니다.",
+      "recipe": [
+        "1: 소고기와 양파를 준비합니다",
+        "2: 소고기를 먼저 익힙니다",
+        "3: 양파와 후추를 더해 마무리합니다"
+      ],
+      "ingredients": ["beef", "onion", "pepper"]
+    },
+    {
+      "liquor_name": "whisky",
+      "refresh_group": 0,
+      "rank_hint": 84,
+      "name": "베이컨 양파볶음",
+      "reason": "베이컨의 훈연감과 양파의 단맛이 위스키의 묵직한 향과 잘 어울립니다.",
+      "recipe": [
+        "1: 베이컨과 양파를 손질합니다",
+        "2: 베이컨을 먼저 익혀 기름을 냅니다",
+        "3: 양파와 버터를 더해 짧게 마무리합니다"
+      ],
+      "ingredients": ["bacon", "onion", "butter"]
+    },
+    {
+      "liquor_name": "whisky",
+      "refresh_group": 0,
+      "rank_hint": 80,
+      "name": "양파 치즈토스트",
+      "reason": "달큰한 양파와 치즈, 바삭한 빵의 조합이 위스키와 잘 맞는 간단한 안주가 됩니다.",
+      "recipe": [
+        "1: 양파를 볶아 단맛을 냅니다",
+        "2: 빵 위에 치즈와 함께 올립니다",
+        "3: 노릇하게 구워냅니다"
+      ],
+      "ingredients": ["onion", "cheese", "bread"]
+    },
+    {
+      "liquor_name": "whisky",
+      "refresh_group": 1,
+      "rank_hint": 93,
+      "name": "버터 버섯볶음",
+      "reason": "버터에 볶은 버섯의 진한 향이 위스키의 무게감과 자연스럽게 이어집니다.",
+      "recipe": [
+        "1: 버섯과 양파를 손질합니다",
+        "2: 버터에 향을 냅니다",
+        "3: 버섯을 넣고 짧게 볶습니다"
+      ],
+      "ingredients": ["mushroom", "butter", "onion"]
+    },
+    {
+      "liquor_name": "whisky",
+      "refresh_group": 1,
+      "rank_hint": 89,
+      "name": "감자 베이컨치즈구이",
+      "reason": "감자, 베이컨, 치즈의 풍부한 조합은 위스키와 곁들이기 좋은 묵직한 안주입니다.",
+      "recipe": [
+        "1: 감자와 베이컨을 준비합니다",
+        "2: 치즈를 올려 함께 익힙니다",
+        "3: 노릇하게 마무리합니다"
+      ],
+      "ingredients": ["potato", "bacon", "cheese"]
+    },
+    {
+      "liquor_name": "whisky",
+      "refresh_group": 1,
+      "rank_hint": 86,
+      "name": "소시지 버터구이",
+      "reason": "짭짤한 소시지의 직선적인 맛이 위스키와 함께 먹기 좋은 간단한 안주가 됩니다.",
+      "recipe": [
+        "1: 소시지를 준비합니다",
+        "2: 버터에 굽습니다",
+        "3: 후추를 더해 마무리합니다"
+      ],
+      "ingredients": ["sausage", "butter", "pepper"]
+    },
+    {
+      "liquor_name": "whisky",
+      "refresh_group": 1,
+      "rank_hint": 83,
+      "name": "소시지 치즈구이",
+      "reason": "짭짤한 소시지와 녹진한 치즈 조합은 위스키와 곁들이기 좋은 전형적인 묵직한 안주입니다.",
+      "recipe": [
+        "1: 소시지를 먹기 좋게 자릅니다",
+        "2: 팬에 소시지를 먼저 익힙니다",
+        "3: 치즈를 올리고 후추를 더해 마무리합니다"
+      ],
+      "ingredients": ["sausage", "cheese", "pepper"]
+    },
+    {
+      "liquor_name": "whisky",
+      "refresh_group": 1,
+      "rank_hint": 81,
+      "name": "소고기 버섯구이",
+      "reason": "소고기와 버섯의 진한 향은 위스키와 가장 안정적으로 잘 맞는 조합 중 하나입니다.",
+      "recipe": [
+        "1: 소고기와 버섯을 손질합니다",
+        "2: 마늘 향을 내며 구워냅니다",
+        "3: 식감이 남도록 짧게 마무리합니다"
+      ],
+      "ingredients": ["beef", "mushroom", "garlic"]
+    },
+
+    {
+      "liquor_name": "sparkling_wine",
+      "refresh_group": 0,
+      "rank_hint": 95,
+      "name": "토마토 오이 치즈샐러드",
+      "reason": "가벼운 산미와 청량감을 가진 스파클링 와인에는 상큼한 채소와 치즈 조합이 가장 잘 어울립니다.",
+      "recipe": [
+        "1: 토마토와 오이를 손질합니다",
+        "2: 치즈를 준비합니다",
+        "3: 차갑게 담아 바로 냅니다"
+      ],
+      "ingredients": ["tomato", "cucumber", "cheese"]
+    },
+    {
+      "liquor_name": "sparkling_wine",
+      "refresh_group": 0,
+      "rank_hint": 91,
+      "name": "요거트 과채샐러드",
+      "reason": "요거트의 산뜻함과 채소의 가벼움이 스파클링 와인의 청량감과 잘 맞습니다.",
+      "recipe": [
+        "1: 양상추와 오이를 손질합니다",
+        "2: 토마토를 함께 준비합니다",
+        "3: 요거트를 곁들여 냅니다"
+      ],
+      "ingredients": ["yogurt", "lettuce", "cucumber", "tomato"]
+    },
+    {
+      "liquor_name": "sparkling_wine",
+      "refresh_group": 0,
+      "rank_hint": 88,
+      "name": "치즈 브로콜리볼",
+      "reason": "브로콜리와 치즈, 달걀의 부드러운 조합이 스파클링 와인과 가볍게 잘 맞습니다.",
+      "recipe": [
+        "1: 브로콜리를 잘게 다집니다",
+        "2: 치즈와 달걀을 섞습니다",
+        "3: 한입 크기로 익혀냅니다"
+      ],
+      "ingredients": ["cheese", "broccoli", "egg"]
+    },
+    {
+      "liquor_name": "sparkling_wine",
+      "refresh_group": 0,
+      "rank_hint": 85,
+      "name": "생선 오이롤풍 샐러드",
+      "reason": "담백한 생선과 오이의 산뜻한 조합이 스파클링 와인의 청량함과 잘 어울립니다.",
+      "recipe": [
+        "1: 생선과 오이를 준비합니다",
+        "2: 양상추를 곁들입니다",
+        "3: 차갑게 담아 냅니다"
+      ],
+      "ingredients": ["fish", "cucumber", "lettuce"]
+    },
+    {
+      "liquor_name": "sparkling_wine",
+      "refresh_group": 0,
+      "rank_hint": 82,
+      "name": "달걀 토마토 카나페풍 토스트",
+      "reason": "한입 크기로 즐기기 좋은 달걀, 토마토, 빵 조합은 스파클링 와인과 잘 맞습니다.",
+      "recipe": [
+        "1: 빵을 작게 자릅니다",
+        "2: 달걀과 토마토를 올립니다",
+        "3: 치즈를 살짝 더해 마무리합니다"
+      ],
+      "ingredients": ["egg", "tomato", "bread", "cheese"]
+    },
+    {
+      "liquor_name": "sparkling_wine",
+      "refresh_group": 1,
+      "rank_hint": 94,
+      "name": "양상추 치킨샐러드",
+      "reason": "닭고기의 담백함과 양상추의 가벼움이 스파클링 와인과 산뜻하게 잘 맞습니다.",
+      "recipe": [
+        "1: 닭고기를 익혀 찢습니다",
+        "2: 양상추와 오이를 준비합니다",
+        "3: 함께 섞어 바로 냅니다"
+      ],
+      "ingredients": ["lettuce", "chicken", "cucumber"]
+    },
+    {
+      "liquor_name": "sparkling_wine",
+      "refresh_group": 1,
+      "rank_hint": 89,
+      "name": "오이 치즈샐러드",
+      "reason": "오이의 청량감과 치즈의 부드러움이 스파클링 와인을 가볍게 즐기기 좋게 만들어줍니다.",
+      "recipe": [
+        "1: 오이를 얇게 썹니다",
+        "2: 치즈와 요거트를 준비합니다",
+        "3: 함께 버무려 냅니다"
+      ],
+      "ingredients": ["cucumber", "cheese", "yogurt"]
+    },
+    {
+      "liquor_name": "sparkling_wine",
+      "refresh_group": 1,
+      "rank_hint": 86,
+      "name": "브로콜리 토마토샐러드",
+      "reason": "브로콜리의 식감과 토마토의 산미가 스파클링 와인의 청량함과 잘 맞습니다.",
+      "recipe": [
+        "1: 브로콜리를 가볍게 준비합니다",
+        "2: 토마토와 양파를 손질합니다",
+        "3: 함께 섞어 차갑게 냅니다"
+      ],
+      "ingredients": ["broccoli", "tomato", "onion"]
+    },
+    {
+      "liquor_name": "sparkling_wine",
+      "refresh_group": 1,
+      "rank_hint": 83,
+      "name": "치즈 오이 카나페풍 토스트",
+      "reason": "가벼운 빵 위에 치즈와 오이를 올린 한입 안주는 스파클링 와인의 청량감을 가장 직관적으로 살려줍니다.",
+      "recipe": [
+        "1: 빵을 한입 크기로 자릅니다",
+        "2: 치즈와 오이를 올립니다",
+        "3: 가볍게 익히거나 차갑게 바로 냅니다"
+      ],
+      "ingredients": ["bread", "cheese", "cucumber"]
+    },
+    {
+      "liquor_name": "sparkling_wine",
+      "refresh_group": 1,
+      "rank_hint": 80,
+      "name": "토마토 치즈 카나페풍 토스트",
+      "reason": "토마토의 산미와 치즈의 고소함을 한입 크기로 즐기면 스파클링 와인과 가장 부담 없이 잘 맞습니다.",
+      "recipe": [
+        "1: 빵과 토마토를 준비합니다",
+        "2: 치즈를 올려 한입 크기로 만듭니다",
+        "3: 가볍게 구워 바로 냅니다"
+      ],
+      "ingredients": ["bread", "tomato", "cheese"]
+    },
+
+    {
+      "liquor_name": "sake",
+      "refresh_group": 0,
+      "rank_hint": 95,
+      "name": "생선 대파찜",
+      "reason": "사케의 은은한 향에는 담백한 생선과 대파 조합이 가장 안정적으로 잘 어울립니다.",
+      "recipe": [
+        "1: 생선과 대파를 손질합니다",
+        "2: 양파를 깔고 함께 익힙니다",
+        "3: 부드럽게 쪄서 바로 냅니다"
+      ],
+      "ingredients": ["fish", "green_onion", "onion"]
+    },
+    {
+      "liquor_name": "sake",
+      "refresh_group": 0,
+      "rank_hint": 91,
+      "name": "달걀 버섯말이풍 볶음",
+      "reason": "달걀과 버섯의 부드러운 맛은 사케의 섬세한 향을 방해하지 않고 잘 어울립니다.",
+      "recipe": [
+        "1: 버섯과 대파를 잘게 썹니다",
+        "2: 달걀과 함께 익힙니다",
+        "3: 부드럽게 말아 마무리합니다"
+      ],
+      "ingredients": ["egg", "mushroom", "green_onion"]
+    },
+    {
+      "liquor_name": "sake",
+      "refresh_group": 0,
+      "rank_hint": 88,
+      "name": "닭고기 버섯볶음",
+      "reason": "닭고기의 담백함과 버섯의 은은한 우마미가 사케의 섬세한 향을 해치지 않고 잘 받쳐줍니다.",
+      "recipe": [
+        "1: 닭고기와 버섯을 손질합니다",
+        "2: 닭고기를 먼저 익힙니다",
+        "3: 버섯과 양파를 넣고 담백하게 마무리합니다"
+      ],
+      "ingredients": ["chicken", "mushroom", "onion"]
+    },
+    {
+      "liquor_name": "sake",
+      "refresh_group": 0,
+      "rank_hint": 85,
+      "name": "시금치 달걀볶음",
+      "reason": "시금치의 부드러운 향과 달걀의 순한 맛이 사케와 잘 어울립니다.",
+      "recipe": [
+        "1: 시금치를 손질합니다",
+        "2: 달걀을 먼저 익힙니다",
+        "3: 시금치와 양파를 넣고 마무리합니다"
+      ],
+      "ingredients": ["spinach", "egg", "onion"]
+    },
+    {
+      "liquor_name": "sake",
+      "refresh_group": 0,
+      "rank_hint": 82,
+      "name": "오이 양파무침",
+      "reason": "사케와 함께할 때는 오이와 양파처럼 시원한 채소 안주도 잘 어울립니다.",
+      "recipe": [
+        "1: 오이와 양파를 얇게 썹니다",
+        "2: 대파를 더해 가볍게 섞습니다",
+        "3: 차갑게 두었다가 냅니다"
+      ],
+      "ingredients": ["cucumber", "onion", "green_onion"]
+    },
+    {
+      "liquor_name": "sake",
+      "refresh_group": 1,
+      "rank_hint": 94,
+      "name": "버섯 브로콜리볶음",
+      "reason": "버섯의 향과 브로콜리의 식감이 사케와 함께 먹을 때 담백하게 잘 맞습니다.",
+      "recipe": [
+        "1: 버섯과 브로콜리를 손질합니다",
+        "2: 마늘 향을 냅니다",
+        "3: 함께 볶아 바로 냅니다"
+      ],
+      "ingredients": ["mushroom", "broccoli", "garlic"]
+    },
+    {
+      "liquor_name": "sake",
+      "refresh_group": 1,
+      "rank_hint": 89,
+      "name": "생선 버섯구이풍 볶음",
+      "reason": "담백한 생선과 버섯의 잔잔한 우마미가 사케와 가장 안정적으로 잘 어울립니다.",
+      "recipe": [
+        "1: 생선과 버섯을 손질합니다",
+        "2: 양파를 먼저 익혀 향을 냅니다",
+        "3: 생선과 버섯을 넣고 수분감 있게 마무리합니다"
+      ],
+      "ingredients": ["fish", "mushroom", "onion"]
+    },
+    {
+      "liquor_name": "sake",
+      "refresh_group": 1,
+      "rank_hint": 86,
+      "name": "애호박 달걀볶음",
+      "reason": "애호박과 달걀의 부드러운 식감은 사케를 편안하게 즐기기 좋은 안주가 됩니다.",
+      "recipe": [
+        "1: 애호박과 양파를 손질합니다",
+        "2: 달걀을 먼저 익힙니다",
+        "3: 애호박을 넣고 함께 마무리합니다"
+      ],
+      "ingredients": ["zucchini", "egg", "onion"]
+    },
+    {
+      "liquor_name": "sake",
+      "refresh_group": 1,
+      "rank_hint": 83,
+      "name": "양배추 버섯볶음",
+      "reason": "양배추의 단맛과 버섯의 부드러운 향이 사케를 편안하게 즐기기 좋은 조합을 만듭니다.",
+      "recipe": [
+        "1: 양배추와 버섯을 손질합니다",
+        "2: 양파를 먼저 볶아 향을 냅니다",
+        "3: 양배추와 버섯을 넣고 가볍게 마무리합니다"
+      ],
+      "ingredients": ["cabbage", "mushroom", "onion"]
+    },
+    {
+      "liquor_name": "sake",
+      "refresh_group": 1,
+      "rank_hint": 80,
+      "name": "대파 닭고기볶음",
+      "reason": "대파 향과 닭고기의 담백함이 사케의 은은한 향을 잘 살려줍니다.",
+      "recipe": [
+        "1: 대파와 닭고기를 손질합니다",
+        "2: 닭고기를 먼저 익힙니다",
+        "3: 대파와 함께 빠르게 볶아냅니다"
+      ],
+      "ingredients": ["green_onion", "chicken", "onion"]
     }
   ]
 }

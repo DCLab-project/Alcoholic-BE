@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.router import api_router
 from app.config.settings import get_settings
@@ -20,11 +21,15 @@ openapi_tags = [
     },
     {
         "name": "재고 관리",
-        "description": "현재 식재료 재고를 조회하고, 일괄 저장하거나 수량을 수동 조절하는 API입니다.",
+        "description": "현재 식재료 재고를 조회하고, 저장하거나 수량을 수동 조절하는 API입니다.",
     },
     {
         "name": "실시간 스트림",
-        "description": "프론트엔드가 구독하는 SSE 스트림 API입니다. 식재료/주류 감지 결과를 실시간으로 받을 때 사용합니다.",
+        "description": "프론트엔드가 구독하는 SSE 스트림 API입니다. 식재료, 주류, 추천 결과를 실시간으로 전달합니다.",
+    },
+    {
+        "name": "추천",
+        "description": "현재 재고와 주류 기준으로 추천 결과를 조회하는 API입니다.",
     },
 ]
 
@@ -45,13 +50,22 @@ app = FastAPI(
     version="0.1.0",
     description=(
         "술안주 추천 AI 냉장고 프로젝트의 백엔드 서버입니다.\n\n"
-        "현재는 식재료/주류 실시간 인식 이벤트 수신, 재고 일괄 저장, "
-        "재고 조회, 수량 수동 조절, SSE 기반 실시간 스트림을 우선 제공합니다.\n\n"
-        "프론트엔드 테스트용 Swagger 문서에는 FE가 직접 사용하는 API만 표시합니다. "
-        "Jetson/AI가 호출하는 내부용 인식 입력 API는 실제로 존재하지만 문서에서는 숨겨둔 상태입니다."
+        "현재는 식재료/주류 실시간 이벤트 수신, 재고 관리, 수동 스캔 fallback, "
+        "seed 레시피 기반 추천 반환 흐름을 우선 구현했습니다.\n\n"
+        "Swagger 문서에는 프론트가 직접 사용하는 API 중심으로 노출하며, "
+        "Jetson/AI 내부 입력용 API는 문서에서 숨겨져 있습니다."
     ),
     openapi_tags=openapi_tags,
     lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_origin_regex=settings.cors_origin_regex,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(api_router)

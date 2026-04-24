@@ -60,11 +60,19 @@
 - `seeds/recommendations.json`
 
 이 파일은 이후 LLM으로 대량 생성한 레시피 후보를 사람이 검수한 뒤 넣는 출발점으로 사용할 수 있게 구성했습니다.
+추천 지식 설계 원칙과 술별 페어링 기준은 아래 문서에 정리합니다.
+
+- `docs/recommendation_knowledge.md`
 
 현재는 예시로 아래 주류 seed가 들어 있습니다.
 
 - `soju`
 - `beer`
+- `white_wine`
+- `red_wine`
+- `whisky`
+- `sparkling_wine`
+- `sake`
 
 각 레시피에는 아래 정보가 저장됩니다.
 
