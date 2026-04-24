@@ -101,6 +101,16 @@
 - `pantry_items`
 - `tip`
 
+현재 seed 레시피 70개를 사람이 한 번에 검수하기 좋은 문서로 내보내려면 아래 스크립트를 사용합니다.
+
+- `scripts/export_recipe_catalog.py`
+
+생성 파일:
+
+- `docs/recipe_catalog.md`
+
+이 문서에는 술별 레시피 수, 추천 이유, 핵심 재료, 상온 양념, 조리 순서, 팁이 정리되어 있어 육안 검수에 바로 사용할 수 있습니다.
+
 로컬 FE 테스트용으로 냉장고 재고를 넉넉하게 채우고 싶을 때는 아래 스크립트를 사용합니다.
 
 - `scripts/seed_demo_inventory.py`
