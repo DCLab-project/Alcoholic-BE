@@ -14,6 +14,7 @@ from app.domain.models import InventoryItem
 from app.repositories.inventory_repository import InventoryRepository
 from app.seeds.recommendation_seed import seed_recommendation_data
 from app.schemas.inventory import InventoryBulkCreate
+from app.schemas.recommendation import RecommendationsResponse
 from app.services.inventory_service import InventoryService
 from app.services.name_mapping import (
     ingredient_display_name,
@@ -27,6 +28,8 @@ from app.services.recommendation_service import RecommendationService
 ROOT_DIR = Path(__file__).resolve().parents[1]
 SEED_PATH = ROOT_DIR / "seeds" / "recommendations.json"
 POLICY_PATH = ROOT_DIR / "docs" / "recommendation_policy.md"
+README_PATH = ROOT_DIR / "README.md"
+EVENT_ROUTE_PATH = ROOT_DIR / "app" / "api" / "routes" / "events.py"
 
 ALLOWED_INGREDIENT_KEYS = {
     "bacon",
@@ -272,6 +275,43 @@ class PolicyDocumentationQualityGateTest(unittest.TestCase):
         for term in required_terms:
             with self.subTest(term=term):
                 self.assertIn(term, policy_text)
+
+
+class SwaggerDocumentationQualityGateTest(unittest.TestCase):
+    def test_recommendation_response_schema_has_realistic_example(self) -> None:
+        schema = RecommendationsResponse.model_json_schema()
+        example = schema.get("example")
+
+        self.assertIsInstance(example, dict)
+        self.assertEqual("소주", example["liquor"])
+        self.assertEqual(1, len(example["recommendations"]))
+
+        first = example["recommendations"][0]
+        self.assertEqual(["돼지고기"], first["missing_ingredients"])
+        self.assertIn("recipe_steps", first)
+        self.assertIn("pairing_knowledge", first)
+        self.assertIn("score_breakdown", first)
+
+        first_ingredient = first["ingredient_details"][0]
+        self.assertEqual("pork", first_ingredient["item_name"])
+        self.assertEqual("돼지고기", first_ingredient["display_name"])
+
+        example_text = json.dumps(example, ensure_ascii=False)
+        self.assertNotIn('"liquor": "soju"', example_text)
+        self.assertNotIn('"missing_ingredients": ["pork"', example_text)
+
+    def test_readme_recommendation_example_uses_display_values(self) -> None:
+        readme_text = README_PATH.read_text(encoding="utf-8")
+
+        self.assertIn('"liquor": "소주"', readme_text)
+        self.assertIn('"missing_ingredients": ["돼지고기", "마늘"]', readme_text)
+        self.assertNotIn('"liquor": "soju"', readme_text)
+        self.assertNotIn('"missing_ingredients": ["pork", "garlic"]', readme_text)
+
+    def test_recommendation_stream_docs_do_not_claim_fixed_delay(self) -> None:
+        events_route_text = EVENT_ROUTE_PATH.read_text(encoding="utf-8")
+
+        self.assertNotIn("약간의 지연 후 생성된 추천 결과", events_route_text)
 
 
 class ServiceQualityGateTest(unittest.TestCase):

@@ -1,6 +1,126 @@
 from pydantic import BaseModel, Field
 
 
+RECOMMENDATIONS_RESPONSE_EXAMPLE = {
+    "liquor": "소주",
+    "recommendations": [
+        {
+            "name": "돼지목살 대파 소금구이",
+            "reason": "돼지목살의 고소한 육향과 구운 대파의 단맛을 살린 소주와 잘 어울리는 집 안주예요.",
+            "priority_rank": 1,
+            "priority_reason": "현재 재고만으로 바로 만들 수 있고 페어링 기본 점수도 높아서 1순위로 골랐어요.",
+            "selection_factors": [
+                "핵심 재료 3개 중 2개를 지금 냉장고 재료로 바로 활용할 수 있어요.",
+                "부족한 핵심 재료가 1개라 준비 부담이 비교적 적어요.",
+                "이 주류와의 기본 페어링 점수가 아주 높은 후보예요.",
+            ],
+            "score_breakdown": {
+                "available_ingredient_count": 2,
+                "missing_ingredient_count": 1,
+                "rank_hint": 95,
+                "total_score": 99,
+            },
+            "servings": 1,
+            "cook_time_minutes": 15,
+            "difficulty": "easy",
+            "pairing_knowledge": {
+                "flavor_logic": "돼지목살의 고소한 육향과 구운 대파의 단맛이 소주의 깔끔한 목넘김과 잘 어울려요.",
+                "ingredient_logic": "돼지고기와 대파를 팬구이 방식으로 조리해 구운 향과 단맛을 살렸어요.",
+                "why_this_liquor": "소주는 기름진 고기 안주의 끝맛을 가볍게 정리해주기 좋아요.",
+            },
+            "ingredient_details": [
+                {
+                    "item_name": "pork",
+                    "display_name": "돼지고기",
+                    "variant_detail": "구이용 돼지목살 또는 앞다리살",
+                    "amount": 220,
+                    "unit": "g",
+                    "status": "missing",
+                },
+                {
+                    "item_name": "green_onion",
+                    "display_name": "대파",
+                    "variant_detail": "굵은 대파",
+                    "amount": 1,
+                    "unit": "대",
+                    "status": "available",
+                },
+                {
+                    "item_name": "lettuce",
+                    "display_name": "상추",
+                    "variant_detail": "쌈용 상추",
+                    "amount": 4,
+                    "unit": "장",
+                    "status": "available",
+                },
+            ],
+            "pantry_items": [
+                "식용유 1큰술",
+                "소금 0.3작은술",
+                "후추 0.2작은술",
+            ],
+            "pantry_item_details": [
+                {"name": "식용유", "amount": 1, "unit": "큰술"},
+                {"name": "소금", "amount": 0.3, "unit": "작은술"},
+                {"name": "후추", "amount": 0.2, "unit": "작은술"},
+            ],
+            "recipe": [
+                "1. 재료 손질: 돼지고기, 대파, 상추를 먹기 좋은 크기로 준비하고, 물기가 있는 재료는 키친타월로 가볍게 눌러주세요.",
+                "2. 밑간하기: 돼지고기에 소금과 후추를 가볍게 뿌려주세요.",
+                "3. 굽기: 달군 팬에 돼지고기를 올려 앞뒤로 노릇하게 구워주세요.",
+                "4. 대파 굽기: 돼지고기 기름에 대파를 넣고 구운 향이 나도록 익혀주세요.",
+                "5. 담아내기: 상추와 함께 접시에 담아 바로 곁들여주세요.",
+            ],
+            "recipe_steps": [
+                {
+                    "step_number": 1,
+                    "title": "재료 손질",
+                    "instruction": "돼지고기, 대파, 상추를 먹기 좋은 크기로 준비하고, 물기가 있는 재료는 키친타월로 가볍게 눌러주세요.",
+                    "time_minutes": 3,
+                    "heat_level": "없음",
+                    "success_cue": "재료 크기가 비슷하고 표면 물기가 많지 않으면 좋아요.",
+                },
+                {
+                    "step_number": 2,
+                    "title": "밑간하기",
+                    "instruction": "돼지고기에 소금과 후추를 가볍게 뿌려주세요.",
+                    "time_minutes": 2,
+                    "heat_level": "없음",
+                    "success_cue": "고기 표면에 간이 얇게 고르게 붙어 있으면 좋아요.",
+                },
+                {
+                    "step_number": 3,
+                    "title": "굽기",
+                    "instruction": "달군 팬에 돼지고기를 올려 앞뒤로 노릇하게 구워주세요.",
+                    "time_minutes": 6,
+                    "heat_level": "중강불",
+                    "success_cue": "겉면에 노릇한 구운 자국이 생기면 좋아요.",
+                },
+                {
+                    "step_number": 4,
+                    "title": "대파 굽기",
+                    "instruction": "돼지고기 기름에 대파를 넣고 구운 향이 나도록 익혀주세요.",
+                    "time_minutes": 3,
+                    "heat_level": "중불",
+                    "success_cue": "대파 가장자리가 갈색이고 단향이 올라오면 좋아요.",
+                },
+                {
+                    "step_number": 5,
+                    "title": "담아내기",
+                    "instruction": "상추와 함께 접시에 담아 바로 곁들여주세요.",
+                    "time_minutes": 1,
+                    "heat_level": "없음",
+                    "success_cue": "고기는 따뜻하고 상추는 숨이 죽지 않은 상태면 좋아요.",
+                },
+            ],
+            "missing_ingredients": ["돼지고기"],
+            "tip": "고기를 올리기 전 팬을 충분히 예열하면 물이 덜 나오고 구운 향이 선명해져요.",
+            "tags": ["팬구이", "돼지고기", "대파", "소주"],
+        }
+    ],
+}
+
+
 class RecommendationIngredientDetail(BaseModel):
     item_name: str = Field(description="내부 식재료 키 이름")
     display_name: str = Field(description="사용자에게 보여줄 식재료 한글 이름")
@@ -70,3 +190,9 @@ class RecommendationItem(BaseModel):
 class RecommendationsResponse(BaseModel):
     liquor: str = Field(description="추천 기준이 된 주류 한글 이름")
     recommendations: list[RecommendationItem] = Field(description="안주 추천 결과 목록")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": RECOMMENDATIONS_RESPONSE_EXAMPLE,
+        }
+    }

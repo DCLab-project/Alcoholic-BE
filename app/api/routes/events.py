@@ -56,8 +56,8 @@ async def stream_liquor_events() -> StreamingResponse:
     "/recommendations",
     summary="실시간 추천 결과 스트림",
     description=(
-        "주류 감지 이벤트가 들어온 뒤, 약간의 지연 후 생성된 추천 결과를 Server-Sent Events(SSE) 방식으로 실시간 스트리밍합니다. "
-        "프론트는 이 스트림을 구독하면 술 이름을 먼저 보여주고, 잠시 뒤 추천 카드 3개를 자동으로 갱신할 수 있습니다."
+        "주류 감지 이벤트가 들어온 뒤 생성된 추천 결과를 Server-Sent Events(SSE) 방식으로 실시간 스트리밍합니다. "
+        "프론트는 이 스트림을 구독하면 술 이름을 먼저 보여주고, 추천 카드 3개를 자동으로 갱신할 수 있습니다."
     ),
     response_description="recommendation 이벤트가 SSE 형식으로 지속적으로 전달됩니다.",
 )
