@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from typing import Any
 
 from sqlalchemy import inspect, select, text
 from sqlalchemy.engine import Engine
@@ -13,7 +14,7 @@ SEED_FILE = Path(__file__).resolve().parents[2] / "seeds" / "recommendations.jso
 FALLBACK_DISPLAY_NAMES = {
     "bacon": "베이컨",
     "beef": "소고기",
-    "bread": "식빵",
+    "bread": "빵",
     "broccoli": "브로콜리",
     "butter": "버터",
     "cabbage": "양배추",
@@ -26,7 +27,7 @@ FALLBACK_DISPLAY_NAMES = {
     "fish": "생선",
     "garlic": "마늘",
     "green_onion": "대파",
-    "lettuce": "양상추",
+    "lettuce": "상추",
     "milk": "우유",
     "mushroom": "버섯",
     "onion": "양파",
@@ -54,10 +55,17 @@ def _ensure_recipe_schema(bind: Engine) -> None:
         "cook_time_minutes": "INTEGER NOT NULL DEFAULT 15",
         "difficulty": "VARCHAR(20) NOT NULL DEFAULT 'easy'",
         "pantry_items_text": "TEXT NOT NULL DEFAULT ''",
+        "pantry_item_details_text": "TEXT NOT NULL DEFAULT ''",
+        "recipe_steps_text": "TEXT NOT NULL DEFAULT ''",
+        "pairing_flavor_logic": "TEXT NOT NULL DEFAULT ''",
+        "pairing_ingredient_logic": "TEXT NOT NULL DEFAULT ''",
+        "pairing_why_this_liquor": "TEXT NOT NULL DEFAULT ''",
+        "tags_text": "TEXT NOT NULL DEFAULT ''",
         "tip": "TEXT NOT NULL DEFAULT ''",
     }
     ingredient_additions = {
         "display_name": "VARCHAR(100) NOT NULL DEFAULT ''",
+        "variant_detail": "TEXT NOT NULL DEFAULT ''",
         "amount": "FLOAT NOT NULL DEFAULT 1",
         "unit": "VARCHAR(20) NOT NULL DEFAULT '개'",
     }
@@ -77,6 +85,10 @@ def _ensure_recipe_schema(bind: Engine) -> None:
                 )
 
 
+def _json_dumps(value: Any) -> str:
+    return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
+
+
 def _normalize_ingredient_details(recipe_payload: dict) -> list[dict]:
     ingredient_details = recipe_payload.get("ingredient_details")
     if ingredient_details:
@@ -90,6 +102,7 @@ def _normalize_ingredient_details(recipe_payload: dict) -> list[dict]:
                         "display_name",
                         FALLBACK_DISPLAY_NAMES.get(item_name, item_name),
                     ).strip(),
+                    "variant_detail": ingredient.get("variant_detail", "").strip(),
                     "amount": float(ingredient.get("amount", 1)),
                     "unit": ingredient.get("unit", "개").strip(),
                 }
@@ -103,11 +116,84 @@ def _normalize_ingredient_details(recipe_payload: dict) -> list[dict]:
             {
                 "item_name": item_name,
                 "display_name": FALLBACK_DISPLAY_NAMES.get(item_name, item_name),
+                "variant_detail": "",
                 "amount": 1.0,
                 "unit": "개",
             }
         )
     return fallback_details
+
+
+def _normalize_pantry_items(recipe_payload: dict) -> tuple[list[str], list[dict]]:
+    pantry_payload = recipe_payload.get("pantry_items", [])
+    pantry_text: list[str] = []
+    pantry_details: list[dict] = []
+
+    for item in pantry_payload:
+        if isinstance(item, dict):
+            name = str(item.get("name", "")).strip()
+            if not name:
+                continue
+            amount = float(item.get("amount", 0))
+            unit = str(item.get("unit", "")).strip()
+            pantry_details.append({"name": name, "amount": amount, "unit": unit})
+            pantry_text.append(f"{name} {amount:g}{unit}".strip())
+        else:
+            pantry_line = str(item).strip()
+            if pantry_line:
+                pantry_text.append(pantry_line)
+
+    return pantry_text, pantry_details
+
+
+def _normalize_recipe_steps(recipe_payload: dict) -> tuple[list[str], list[dict]]:
+    steps_payload = recipe_payload.get("recipe_steps")
+    if steps_payload:
+        step_lines: list[str] = []
+        steps: list[dict] = []
+        for index, step in enumerate(steps_payload, start=1):
+            step_number = int(step.get("step_number", index))
+            title = str(step.get("title", "")).strip()
+            instruction = str(step.get("instruction", "")).strip()
+            time_minutes = int(step.get("time_minutes", 0))
+            heat_level = str(step.get("heat_level", "없음")).strip()
+            success_cue = str(step.get("success_cue", "")).strip()
+            steps.append(
+                {
+                    "step_number": step_number,
+                    "title": title,
+                    "instruction": instruction,
+                    "time_minutes": time_minutes,
+                    "heat_level": heat_level,
+                    "success_cue": success_cue,
+                }
+            )
+            title_part = f"{title}: " if title else ""
+            step_lines.append(f"{step_number}. {title_part}{instruction}")
+        return step_lines, steps
+
+    legacy_steps = [str(step).strip() for step in recipe_payload.get("recipe", []) if str(step).strip()]
+    generated_steps = [
+        {
+            "step_number": index,
+            "title": "",
+            "instruction": step,
+            "time_minutes": 0,
+            "heat_level": "없음",
+            "success_cue": "",
+        }
+        for index, step in enumerate(legacy_steps, start=1)
+    ]
+    return legacy_steps, generated_steps
+
+
+def _normalize_pairing(recipe_payload: dict) -> dict:
+    pairing = recipe_payload.get("pairing_knowledge") or {}
+    return {
+        "flavor_logic": str(pairing.get("flavor_logic", "")).strip(),
+        "ingredient_logic": str(pairing.get("ingredient_logic", "")).strip(),
+        "why_this_liquor": str(pairing.get("why_this_liquor", "")).strip(),
+    }
 
 
 def seed_recommendation_data(db: Session) -> None:
@@ -150,33 +236,38 @@ def seed_recommendation_data(db: Session) -> None:
 
         recipe = existing_recipes.get(key)
         ingredient_details = _normalize_ingredient_details(recipe_payload)
-        pantry_items = [item.strip() for item in recipe_payload.get("pantry_items", []) if item.strip()]
+        pantry_items, pantry_item_details = _normalize_pantry_items(recipe_payload)
+        recipe_lines, recipe_steps = _normalize_recipe_steps(recipe_payload)
+        pairing = _normalize_pairing(recipe_payload)
+        tags = [str(tag).strip() for tag in recipe_payload.get("tags", []) if str(tag).strip()]
+
+        recipe_fields = {
+            "liquor_name": key[0],
+            "refresh_group": key[1],
+            "name": key[2],
+            "reason": recipe_payload["reason"].strip(),
+            "instructions_text": "\n".join(recipe_lines),
+            "servings": int(recipe_payload.get("servings", 1)),
+            "cook_time_minutes": int(recipe_payload.get("cook_time_minutes", 15)),
+            "difficulty": recipe_payload.get("difficulty", "easy").strip(),
+            "pantry_items_text": "\n".join(pantry_items),
+            "pantry_item_details_text": _json_dumps(pantry_item_details),
+            "recipe_steps_text": _json_dumps(recipe_steps),
+            "pairing_flavor_logic": pairing["flavor_logic"],
+            "pairing_ingredient_logic": pairing["ingredient_logic"],
+            "pairing_why_this_liquor": pairing["why_this_liquor"],
+            "tags_text": _json_dumps(tags),
+            "tip": recipe_payload.get("tip", "").strip(),
+            "rank_hint": int(recipe_payload.get("rank_hint", 0)),
+        }
 
         if recipe is None:
-            recipe = Recipe(
-                liquor_name=key[0],
-                refresh_group=key[1],
-                name=key[2],
-                reason=recipe_payload["reason"].strip(),
-                instructions_text="\n".join(recipe_payload.get("recipe", [])),
-                servings=int(recipe_payload.get("servings", 1)),
-                cook_time_minutes=int(recipe_payload.get("cook_time_minutes", 15)),
-                difficulty=recipe_payload.get("difficulty", "easy").strip(),
-                pantry_items_text="\n".join(pantry_items),
-                tip=recipe_payload.get("tip", "").strip(),
-                rank_hint=int(recipe_payload.get("rank_hint", 0)),
-            )
+            recipe = Recipe(**recipe_fields)
             db.add(recipe)
             db.flush()
         else:
-            recipe.reason = recipe_payload["reason"].strip()
-            recipe.instructions_text = "\n".join(recipe_payload.get("recipe", []))
-            recipe.servings = int(recipe_payload.get("servings", 1))
-            recipe.cook_time_minutes = int(recipe_payload.get("cook_time_minutes", 15))
-            recipe.difficulty = recipe_payload.get("difficulty", "easy").strip()
-            recipe.pantry_items_text = "\n".join(pantry_items)
-            recipe.tip = recipe_payload.get("tip", "").strip()
-            recipe.rank_hint = int(recipe_payload.get("rank_hint", 0))
+            for field_name, field_value in recipe_fields.items():
+                setattr(recipe, field_name, field_value)
             recipe.ingredients.clear()
             db.flush()
 
@@ -185,6 +276,7 @@ def seed_recommendation_data(db: Session) -> None:
                 RecipeIngredient(
                     ingredient_name=ingredient["item_name"],
                     display_name=ingredient["display_name"],
+                    variant_detail=ingredient["variant_detail"],
                     amount=ingredient["amount"],
                     unit=ingredient["unit"],
                 )

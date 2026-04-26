@@ -16,6 +16,12 @@ from app.services.event_stream import (
     liquor_event_broker,
     recommendation_event_broker,
 )
+from app.services.name_mapping import (
+    ingredient_display_name,
+    liquor_display_name,
+    normalize_ingredient_key,
+    normalize_liquor_key,
+)
 from app.services.recommendation_service import RecommendationService
 
 
@@ -23,28 +29,30 @@ class RecognitionService:
     async def publish_ingredient_live_result(
         self, payload: IngredientLiveRecognitionCreate
     ) -> LiveRecognitionAcceptedResponse:
+        ingredient_key = normalize_ingredient_key(payload.ingredient_name)
         event_payload = IngredientStreamEvent(
-            ingredient_name=payload.ingredient_name,
+            ingredient_name=ingredient_display_name(ingredient_key),
             timestamp=payload.timestamp,
         )
         await ingredient_event_broker.publish(event_payload.model_dump(mode="json"))
         return LiveRecognitionAcceptedResponse(
             status="success",
-            message="Ingredient live event published.",
+            message="식재료 인식 이벤트가 발행되었습니다.",
         )
 
     async def publish_liquor_live_result(
         self, payload: LiquorLiveRecognitionCreate
     ) -> LiveRecognitionAcceptedResponse:
+        liquor_key = normalize_liquor_key(payload.liquor_name)
         event_payload = LiquorStreamEvent(
-            liquor_name=payload.liquor_name,
+            liquor_name=liquor_display_name(liquor_key),
             timestamp=payload.timestamp,
         )
         await liquor_event_broker.publish(event_payload.model_dump(mode="json"))
-        asyncio.create_task(self._publish_recommendation_event(payload.liquor_name))
+        asyncio.create_task(self._publish_recommendation_event(liquor_key))
         return LiveRecognitionAcceptedResponse(
             status="success",
-            message="Liquor live event published.",
+            message="주류 인식 이벤트가 발행되었습니다.",
         )
 
     async def start_liquor_scan(
@@ -73,12 +81,13 @@ class RecognitionService:
         await self.publish_liquor_live_result(payload)
 
     async def _publish_recommendation_event(self, liquor_name: str) -> None:
+        liquor_key = normalize_liquor_key(liquor_name)
         db = SessionLocal()
         try:
             recommendation_service = RecommendationService(db)
             recommendations = await asyncio.to_thread(
                 recommendation_service.get_recommendations,
-                liquor_name,
+                liquor_key,
                 False,
             )
             await recommendation_event_broker.publish(

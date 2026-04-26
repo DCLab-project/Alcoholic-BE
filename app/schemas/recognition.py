@@ -8,8 +8,8 @@ class IngredientLiveRecognitionCreate(BaseModel):
     ingredient_name: str = Field(
         min_length=1,
         max_length=100,
-        description="인식된 식재료의 영문 표준 이름입니다. 예: green_onion, onion, tomato",
-        examples=["green_onion"],
+        description="인식된 식재료 이름입니다. 한글명과 내부 key를 모두 허용합니다. 예: 대파, green_onion",
+        examples=["대파"],
     )
     timestamp: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
@@ -33,7 +33,7 @@ class IngredientLiveRecognitionCreate(BaseModel):
     model_config = {
         "json_schema_extra": {
             "example": {
-                "ingredient_name": "green_onion",
+                "ingredient_name": "대파",
                 "timestamp": "2026-04-10T17:16:01Z",
                 "confidence": 0.93,
                 "source": "ingredient_classifier",
@@ -43,7 +43,7 @@ class IngredientLiveRecognitionCreate(BaseModel):
 
 
 class IngredientStreamEvent(BaseModel):
-    ingredient_name: str = Field(description="실시간으로 감지된 식재료 이름입니다.")
+    ingredient_name: str = Field(description="실시간으로 감지된 식재료 한글 이름입니다.")
     timestamp: datetime = Field(description="해당 식재료 이벤트가 발생한 시각입니다.")
 
 
@@ -51,8 +51,8 @@ class LiquorLiveRecognitionCreate(BaseModel):
     liquor_name: str = Field(
         min_length=1,
         max_length=100,
-        description="인식된 주류의 영문 표준 이름입니다. 예: soju, beer, whiskey",
-        examples=["soju"],
+        description="인식된 주류 이름입니다. 한글명과 내부 key를 모두 허용합니다. 예: 소주, soju",
+        examples=["소주"],
     )
     timestamp: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
@@ -76,7 +76,7 @@ class LiquorLiveRecognitionCreate(BaseModel):
     model_config = {
         "json_schema_extra": {
             "example": {
-                "liquor_name": "soju",
+                "liquor_name": "소주",
                 "timestamp": "2026-04-10T17:20:00Z",
                 "confidence": 0.97,
                 "source": "liquor_classifier",
@@ -86,7 +86,7 @@ class LiquorLiveRecognitionCreate(BaseModel):
 
 
 class LiquorStreamEvent(BaseModel):
-    liquor_name: str = Field(description="실시간으로 감지된 주류 이름입니다.")
+    liquor_name: str = Field(description="실시간으로 감지된 주류 한글 이름입니다.")
     timestamp: datetime = Field(description="해당 주류 이벤트가 발생한 시각입니다.")
 
 

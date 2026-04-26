@@ -19,7 +19,11 @@ router = APIRouter(prefix="/api/v1/recommendations", tags=["추천"])
     response_description="주류 기준 추천 안주 목록을 반환합니다.",
 )
 def get_recommendations(
-    liquor: str = Query(..., description="추천 기준이 되는 주류 이름", examples=["soju"]),
+    liquor: str = Query(
+        ...,
+        description="추천 기준이 되는 주류 이름입니다. 한글명과 내부 key를 모두 허용합니다.",
+        examples=["소주"],
+    ),
     refresh: bool = Query(False, description="true이면 다른 추천 세트를 다시 요청합니다"),
     db: Session = Depends(get_db),
 ) -> RecommendationsResponse:
