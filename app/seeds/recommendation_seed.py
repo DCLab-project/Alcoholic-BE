@@ -44,24 +44,29 @@ FALLBACK_DISPLAY_NAMES = {
 
 def _ensure_recipe_schema(bind: Engine) -> None:
     inspector = inspect(bind)
+    is_mysql = bind.dialect.name in {"mysql", "mariadb"}
 
     recipe_columns = {column["name"] for column in inspector.get_columns("recipes")}
     ingredient_columns = {
         column["name"] for column in inspector.get_columns("recipe_ingredients")
     }
 
+    # MySQL does not allow DEFAULT values on TEXT columns. SQLite keeps the
+    # original defaults for local backward compatibility with existing DB files.
+    text_definition = "TEXT NULL" if is_mysql else "TEXT NOT NULL DEFAULT ''"
+
     recipe_additions = {
         "servings": "INTEGER NOT NULL DEFAULT 1",
         "cook_time_minutes": "INTEGER NOT NULL DEFAULT 15",
         "difficulty": "VARCHAR(20) NOT NULL DEFAULT 'easy'",
-        "pantry_items_text": "TEXT NOT NULL DEFAULT ''",
-        "pantry_item_details_text": "TEXT NOT NULL DEFAULT ''",
-        "recipe_steps_text": "TEXT NOT NULL DEFAULT ''",
-        "pairing_flavor_logic": "TEXT NOT NULL DEFAULT ''",
-        "pairing_ingredient_logic": "TEXT NOT NULL DEFAULT ''",
-        "pairing_why_this_liquor": "TEXT NOT NULL DEFAULT ''",
-        "tags_text": "TEXT NOT NULL DEFAULT ''",
-        "tip": "TEXT NOT NULL DEFAULT ''",
+        "pantry_items_text": text_definition,
+        "pantry_item_details_text": text_definition,
+        "recipe_steps_text": text_definition,
+        "pairing_flavor_logic": text_definition,
+        "pairing_ingredient_logic": text_definition,
+        "pairing_why_this_liquor": text_definition,
+        "tags_text": text_definition,
+        "tip": text_definition,
     }
     ingredient_additions = {
         "display_name": "VARCHAR(100) NOT NULL DEFAULT ''",

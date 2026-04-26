@@ -30,6 +30,8 @@ SEED_PATH = ROOT_DIR / "seeds" / "recommendations.json"
 POLICY_PATH = ROOT_DIR / "docs" / "recommendation_policy.md"
 README_PATH = ROOT_DIR / "README.md"
 EVENT_ROUTE_PATH = ROOT_DIR / "app" / "api" / "routes" / "events.py"
+OPERATIONS_READINESS_PATH = ROOT_DIR / "docs" / "operations_readiness.md"
+DB_INIT_SCRIPT_PATH = ROOT_DIR / "scripts" / "initialize_database.py"
 
 ALLOWED_INGREDIENT_KEYS = {
     "bacon",
@@ -312,6 +314,39 @@ class SwaggerDocumentationQualityGateTest(unittest.TestCase):
         events_route_text = EVENT_ROUTE_PATH.read_text(encoding="utf-8")
 
         self.assertNotIn("약간의 지연 후 생성된 추천 결과", events_route_text)
+
+
+class OperationsReadinessQualityGateTest(unittest.TestCase):
+    def test_readiness_doc_covers_environment_database_and_seed_flow(self) -> None:
+        doc_text = OPERATIONS_READINESS_PATH.read_text(encoding="utf-8")
+
+        required_terms = [
+            "python -m venv .venv",
+            "DATABASE_URL=mysql+pymysql://",
+            "scripts\\initialize_database.py",
+            "RECOMMENDATION_RESPONSE_DELAY_SECONDS=0",
+            "FE smoke test",
+            "SQLite",
+            "MySQL",
+            "Seed 확장",
+        ]
+
+        for term in required_terms:
+            with self.subTest(term=term):
+                self.assertIn(term, doc_text)
+
+    def test_database_initializer_creates_tables_and_loads_seed_data(self) -> None:
+        script_text = DB_INIT_SCRIPT_PATH.read_text(encoding="utf-8")
+
+        self.assertIn("Base.metadata.create_all(bind=engine)", script_text)
+        self.assertIn("seed_recommendation_data(db)", script_text)
+        self.assertIn("render_as_string(hide_password=True)", script_text)
+
+    def test_readme_links_operations_readiness_assets(self) -> None:
+        readme_text = README_PATH.read_text(encoding="utf-8")
+
+        self.assertIn("docs/operations_readiness.md", readme_text)
+        self.assertIn("scripts/initialize_database.py", readme_text)
 
 
 class ServiceQualityGateTest(unittest.TestCase):
