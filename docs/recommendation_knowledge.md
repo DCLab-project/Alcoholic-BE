@@ -33,20 +33,20 @@
 ## 3. 현재 DB seed 운영 기준
 현재 seed는 `seeds/recommendations.json`에 저장한다.
 
-현재 1차 목표 규모:
+현재 seed 규모:
 
 - 주류 7종
-- 각 주류당 10개 레시피
-- 총 70개
+- 각 주류당 30개 레시피
+- 총 210개
 
 주류 카테고리:
 
 - `soju`
 - `beer`
-- `white_wine`
 - `red_wine`
-- `whisky`
+- `white_wine`
 - `sparkling_wine`
+- `whisky`
 - `sake`
 
 각 레시피는 현재 아래 필드를 가진다.
@@ -56,28 +56,33 @@
 - `rank_hint`
 - `name`
 - `reason`
-- `recipe`
-- `ingredients`
-
-2026-04-24부터는 **상세 레시피 응답을 위한 확장 필드**도 함께 다룬다.
-
+- `pairing_knowledge`
 - `servings`
 - `cook_time_minutes`
 - `difficulty`
 - `ingredient_details`
 - `pantry_items`
+- `recipe_steps`
 - `tip`
+- `tags`
 
 의미는 아래와 같다.
 
+- `refresh_group`: 첫 추천과 다른 추천 보기 후보를 나누는 값
+- `rank_hint`: 주류와 레시피의 기본 페어링 점수
+- `pairing_knowledge`: 맛, 재료, 주류 관점의 페어링 설명
 - `servings`: 기본 인분 수
 - `cook_time_minutes`: 예상 조리 시간
 - `difficulty`: FE에서 배지나 텍스트로 보여줄 난이도
 - `ingredient_details`: 내부 key + 한글명 + 정량 + 단위
 - `pantry_items`: 상온 기본 보유 양념/재료
+- `recipe_steps`: 상세 조리 단계
 - `tip`: 사용자가 바로 이해할 수 있는 짧은 조리 팁
+- `tags`: FE 필터나 배지에 활용할 태그
 
 즉 현재 추천 DB는 단순 카드용 텍스트를 넘어서, **상세 레시피 화면까지 확장 가능한 구조**를 목표로 한다.
+
+seed 선정 기준과 추천 점수 정책은 `docs/recommendation_policy.md`에 별도로 정리한다.
 
 추가로 2026-04-24 기준 추천 응답에는 아래 우선순위 설명 필드도 포함한다.
 
@@ -357,8 +362,8 @@
 - LLM 기반 설명 보완
 
 ## 11. 다음 작업 제안
-1. 현재 70개를 다시 한 번 FE 화면 기준으로 확인
-2. `soju`, `beer`, `white_wine` 외 카테고리도 추천 체감 테스트
-3. 주류별 10개 -> 15~20개로 확장
-4. `approved`와 `draft` 상태 필드 추가 검토
-5. 나중에 Gemini를 사용해 후보 초안을 늘리고, 사람 검수 후 seed에 반영
+1. 현재 210개 seed를 FE 화면 기준으로 체감 검수
+2. 추천 결과의 `priority_reason`, `selection_factors`, `missing_ingredients` 표시 방식 확정
+3. Swagger/API 예시를 실제 응답 구조와 1:1로 정리
+4. 주류별 seed를 30개 이상으로 확장할 때 `approved`와 `draft` 상태 필드 추가 검토
+5. Gemini/GPT Pro로 후보 초안을 늘리고, 사람 검수와 품질 게이트 통과 후 seed에 반영

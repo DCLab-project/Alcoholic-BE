@@ -26,6 +26,7 @@ from app.services.recommendation_service import RecommendationService
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 SEED_PATH = ROOT_DIR / "seeds" / "recommendations.json"
+POLICY_PATH = ROOT_DIR / "docs" / "recommendation_policy.md"
 
 ALLOWED_INGREDIENT_KEYS = {
     "bacon",
@@ -249,6 +250,28 @@ class MappingQualityGateTest(unittest.TestCase):
         self.assertEqual("red_wine", normalize_liquor_key("red_wine"))
         self.assertEqual("sparkling_wine", normalize_liquor_key("스파클링와인"))
         self.assertEqual("스파클링와인", liquor_display_name("sparkling_wine"))
+
+
+class PolicyDocumentationQualityGateTest(unittest.TestCase):
+    def test_recommendation_policy_documents_seed_and_scoring_rules(self) -> None:
+        policy_text = POLICY_PATH.read_text(encoding="utf-8")
+
+        required_terms = [
+            "추천 seed 선정 및 점수 정책",
+            "실시간 LLM 생성 방식이 아닙니다",
+            "검수된 레시피 풀",
+            "total_score = available_ingredient_count * 3",
+            "- missing_ingredient_count * 2",
+            "+ rank_hint",
+            "refresh_group=0",
+            "refresh_group=1",
+            "missing_ingredients",
+            "품질 게이트 테스트",
+        ]
+
+        for term in required_terms:
+            with self.subTest(term=term):
+                self.assertIn(term, policy_text)
 
 
 class ServiceQualityGateTest(unittest.TestCase):

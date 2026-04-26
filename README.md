@@ -43,14 +43,15 @@
 2. 현재 재고(`inventory_items`) 조회
 3. 주류별 후보 레시피 조회
 4. 현재 재고 기준으로 부족 재료 계산
-5. 간단한 점수화 후 상위 3개 추천 반환
+5. 재고 매칭 점수와 기본 페어링 점수로 상위 3개 추천 반환
 
 즉 현재 추천은 **DB seed + 재고 기반 점수화 추천의 첫 버전**입니다.
+실시간 LLM이 매번 새 레시피를 만드는 구조가 아니라, 검수된 seed 후보 중 현재 상황에 가장 잘 맞는 안주를 고르는 방식입니다.
 
 다만 아직 아래는 구현 전입니다.
 
 - Gemini / LLM 실제 호출
-- 대규모 레시피 카탈로그 자동 생성
+- 운영 중 실시간 레시피 생성
 - 추천 이유 자동 생성/보완
 - 추천 히스토리 저장
 
@@ -59,19 +60,20 @@
 
 - `seeds/recommendations.json`
 
-이 파일은 이후 LLM으로 대량 생성한 레시피 후보를 사람이 검수한 뒤 넣는 출발점으로 사용할 수 있게 구성했습니다.
-추천 지식 설계 원칙과 술별 페어링 기준은 아래 문서에 정리합니다.
+이 파일은 LLM이나 사람이 만든 후보 레시피를 검수한 뒤 넣는 기본 레시피 DB입니다.
+추천 지식 설계 원칙, seed 선정 기준, 점수 정책은 아래 문서에 정리합니다.
 
 - `docs/recommendation_knowledge.md`
+- `docs/recommendation_policy.md`
 
-현재는 예시로 아래 주류 seed가 들어 있습니다.
+현재는 아래 7개 주류에 대해 각 30개씩, 총 210개 seed가 들어 있습니다.
 
 - `soju`
 - `beer`
-- `white_wine`
 - `red_wine`
-- `whisky`
+- `white_wine`
 - `sparkling_wine`
+- `whisky`
 - `sake`
 
 각 레시피에는 아래 정보가 저장됩니다.
@@ -88,20 +90,23 @@
 - 조리 팁
 - refresh용 보조 세트 구분값
 
-상세 레시피 seed를 일괄 보강할 때는 아래 스크립트를 사용합니다.
+추천 점수는 아래 공식으로 계산합니다.
 
-- `scripts/enrich_recommendation_seeds.py`
+```text
+total_score = available_ingredient_count * 3
+            - missing_ingredient_count * 2
+            + rank_hint
+```
 
-이 스크립트는 현재 70개 seed 레시피에 대해 아래 필드를 자동으로 채웁니다.
+즉 기본 페어링 점수(`rank_hint`)가 높아도, 현재 냉장고에 재료가 거의 없으면 우선순위가 내려갑니다.
+반대로 지금 재고로 바로 만들 수 있는 안주는 더 위로 올라옵니다.
 
-- `servings`
-- `cook_time_minutes`
-- `difficulty`
-- `ingredient_details`
-- `pantry_items`
-- `tip`
+seed를 다시 생성하거나 정리할 때는 아래 스크립트를 사용합니다.
 
-현재 seed 레시피 70개를 사람이 한 번에 검수하기 좋은 문서로 내보내려면 아래 스크립트를 사용합니다.
+- `scripts/build_recommendation_seeds.py`
+- `scripts/polish_recommendation_seeds.py`
+
+seed 레시피를 사람이 한 번에 검수하기 좋은 문서로 내보내려면 아래 스크립트를 사용합니다.
 
 - `scripts/export_recipe_catalog.py`
 
