@@ -19,6 +19,18 @@ def _parse_cors_origins(value: str | None) -> list[str]:
     return [origin.strip() for origin in value.split(",") if origin.strip()]
 
 
+def _parse_non_negative_float(value: str | None, default: float) -> float:
+    if value is None:
+        return default
+
+    try:
+        parsed = float(value)
+    except ValueError:
+        return default
+
+    return max(parsed, 0.0)
+
+
 class Settings(BaseModel):
     app_name: str = os.getenv("APP_NAME", "Alcoholic-BE")
     app_env: str = os.getenv("APP_ENV", "local")
@@ -32,6 +44,10 @@ class Settings(BaseModel):
     cors_origin_regex: str = os.getenv(
         "CORS_ORIGIN_REGEX",
         r"^https?://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+)(:\d+)?$",
+    )
+    recommendation_response_delay_seconds: float = _parse_non_negative_float(
+        os.getenv("RECOMMENDATION_RESPONSE_DELAY_SECONDS"),
+        0.0,
     )
 
 

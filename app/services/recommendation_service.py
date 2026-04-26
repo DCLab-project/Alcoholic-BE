@@ -4,6 +4,7 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
+from app.config.settings import get_settings
 from app.repositories.inventory_repository import InventoryRepository
 from app.repositories.recommendation_repository import RecommendationRepository
 from app.schemas.recommendation import (
@@ -26,6 +27,7 @@ from app.services.name_mapping import (
 class RecommendationService:
     def __init__(self, db: Session):
         self.db = db
+        self.settings = get_settings()
         self.inventory_repository = InventoryRepository(db)
         self.recommendation_repository = RecommendationRepository(db)
 
@@ -263,7 +265,9 @@ class RecommendationService:
                 )
             )
 
-        time.sleep(5)
+        if self.settings.recommendation_response_delay_seconds > 0:
+            time.sleep(self.settings.recommendation_response_delay_seconds)
+
         return RecommendationsResponse(
             liquor=liquor_display_name(normalized),
             recommendations=recommendations,

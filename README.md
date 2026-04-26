@@ -262,6 +262,13 @@ pip install -r requirements.txt
 Copy-Item .env.example .env
 ```
 
+추천 API는 기본값 기준으로 인위적인 지연 없이 바로 응답합니다.
+로컬 데모에서 로딩 상태를 일부러 보여주고 싶을 때만 `.env`에서 아래 값을 초 단위로 조절합니다.
+
+```env
+RECOMMENDATION_RESPONSE_DELAY_SECONDS=0
+```
+
 ### 5. 서버 실행
 로컬 테스트:
 

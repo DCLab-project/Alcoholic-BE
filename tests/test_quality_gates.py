@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import time
 import unittest
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -306,6 +307,14 @@ class ServiceQualityGateTest(unittest.TestCase):
         self.assertTrue(all(detail.display_name for detail in first.ingredient_details))
         self.assertTrue(all(step.title for step in first.recipe_steps))
         self.assertIn("레드와인", first.tags)
+
+    def test_recommendation_default_response_has_no_artificial_delay(self) -> None:
+        started_at = time.perf_counter()
+        response = RecommendationService(self.db).get_recommendations("레드와인", False)
+        elapsed_seconds = time.perf_counter() - started_at
+
+        self.assertEqual(3, len(response.recommendations))
+        self.assertLess(elapsed_seconds, 1.0)
 
     def test_all_liquor_recommendation_responses_are_display_safe(self) -> None:
         service = RecommendationService(self.db)
