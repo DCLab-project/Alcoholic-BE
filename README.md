@@ -4,6 +4,7 @@
 FE 연동 확인 이후 가상환경 정리, DB 초기화, MySQL 전환, seed 확장 절차는 아래 문서에 정리합니다.
 
 - `docs/operations_readiness.md`
+- `docs/database_setup.md`
 - `scripts/initialize_database.py`
 
 ## 1. 저장소 목적
