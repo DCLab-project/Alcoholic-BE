@@ -52,6 +52,29 @@ Create the schema and load recommendation seeds:
 The initializer runs `Base.metadata.create_all` and then syncs
 `seeds/recommendations.json` into the recipe tables.
 
+Run the app against MySQL:
+
+```powershell
+$env:DATABASE_URL="mysql+pymysql://root:alcoholic@127.0.0.1:3306/alcoholic?charset=utf8mb4"
+.\.venv\Scripts\uvicorn.exe app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+Smoke-check the recommendation API:
+
+```powershell
+Invoke-RestMethod "http://127.0.0.1:8000/api/v1/recommendations?liquor=beer&refresh=false"
+```
+
+The response should contain three recommendations and each item should include
+`ingredient_yes`, `ingredient_no`, `missing_ingredients`, and
+`ingredient_details[].status`.
+
+Run the automated tests before pushing:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider
+```
+
 ## Notes
 
 - Keep SQLite for automated tests unless a test explicitly needs MySQL.
