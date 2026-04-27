@@ -15,9 +15,17 @@
 
 ## Branches
 - Branch prefixes: `feature/...`, `fix/...`, `refactor/...`, `docs/...`
-- Current BE branch: `feature/be-fe-mock-stream-flow`
-- Current AI branch: `feature/ai-baseline-migration`
-- Use issue-first workflow for new work from now on.
+- Do not push directly to `main`.
+- Start each new BE feature or fix from the latest `main` when possible.
+- Create a short GitHub issue first, then create a focused branch for that issue.
+- Recommended branch names:
+  - `fix/be-recommendation-refresh-pagination`
+  - `fix/be-recipe-seed-quality-gates`
+  - `feature/be-cooking-tool-profile`
+  - `feature/be-mysql-migration`
+  - `feature/be-recommendation-history`
+  - `docs/be-api-contract-cleanup`
+- After merge, prefer deleting the branch and preserving history through the issue, PR, and commits.
 
 ## Commits
 - Use Conventional Commits.
@@ -43,7 +51,7 @@
 
 ## Local Run
 - BE run command:
-  - `uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`
+  - `.\.venv\Scripts\uvicorn.exe app.main:app --reload --host 0.0.0.0 --port 8000`
 - Previous LAN test endpoints:
   - BE: `http://192.168.50.123:8000`
   - FE: `http://192.168.50.184:5174`

@@ -140,6 +140,127 @@ STYLE_NEUTRAL_PROFILES = {
     "sake": "사케의 쌀 향과 부드러운 우마미",
 }
 
+BROAD_INGREDIENT_POLICIES = {
+    "fish": {
+        "display_name": "생선",
+        "variant_detail": "가시가 적은 생선살이면 좋아요",
+        "text_name": "생선",
+        "replacements": (
+            "흰살생선",
+            "대구살",
+            "동태살",
+            "연어",
+            "도미살",
+            "광어",
+            "대구",
+            "동태",
+            "도미",
+            "광어",
+        ),
+    },
+    "pork": {
+        "display_name": "돼지고기",
+        "variant_detail": "구이용이나 볶음용 돼지고기면 좋아요",
+        "text_name": "돼지고기",
+        "replacements": (
+            "돼지목살",
+            "돼지안심",
+            "대패 목살",
+            "대패삼겹살",
+            "대패 삼겹살",
+            "삼겹살",
+            "목살",
+            "앞다리살",
+        ),
+    },
+    "chicken": {
+        "display_name": "닭고기",
+        "variant_detail": "뼈 없는 닭고기면 좋아요",
+        "text_name": "닭고기",
+        "replacements": (
+            "닭다리살",
+            "닭가슴살",
+            "닭안심",
+        ),
+    },
+    "mushroom": {
+        "display_name": "버섯",
+        "variant_detail": "익혀 먹기 좋은 버섯이면 좋아요",
+        "text_name": "버섯",
+        "replacements": (
+            "양송이버섯",
+            "표고버섯",
+            "팽이버섯",
+            "느타리버섯",
+            "양송이",
+            "표고",
+            "팽이",
+            "느타리",
+        ),
+    },
+    "cheese": {
+        "display_name": "치즈",
+        "variant_detail": "잘 녹는 치즈면 좋아요",
+        "text_name": "치즈",
+        "replacements": (
+            "체다 치즈",
+            "모짜렐라 치즈",
+            "파마산 치즈",
+            "리코타 치즈",
+            "크림치즈",
+            "체다",
+            "모짜렐라",
+            "파마산",
+            "리코타",
+        ),
+    },
+}
+
+METHOD_NAME_RULES = {
+    "호일구이": "호일",
+    "에어프라이어": "에어프라이어",
+    "팬구이": "팬",
+    "꼬치": "꼬치",
+}
+
+NAME_REPLACEMENTS = {
+    "돼지고기 대파 소금구이": "대파 돼지소금구이",
+    "닭고기 대파 간장구이": "대파 닭간장구이",
+    "소고기 양파 후추구이": "후추 소고기구이",
+    "버섯 소고기 간장볶음": "소고기 버섯간장볶음",
+    "양배추 베이컨 식초볶음": "베이컨 양배추볶음",
+    "감자 돼지고기 간장조림": "돼지고기 감자조림",
+    "생선 파프리카 호일구이": "생선 파프리카 촉촉찜",
+    "생선 브로콜리 팬구이": "브로콜리 생선버터구이",
+    "생선 감자 요거트샐러드": "생선 감자 요거트무침",
+    "생선 파프리카 한입구이": "파프리카 생선구이",
+    "생선 양배추 레몬마요 샐러드": "생선 양배추 레몬마요",
+    "닭고기 양배추 레몬샐러드": "닭고기 양배추 레몬무침",
+    "닭고기 전분구이": "바삭 닭고기구이",
+    "닭고기 파프리카 꼬치구이": "파프리카 닭꼬치",
+    "돼지고기 양파 간장볶음": "양파 돼지간장볶음",
+    "돼지고기 대파 구이": "대파 돼지구이",
+    "버섯 닭고기 맑은전골": "닭고기 버섯전골",
+    "버섯 대파 달걀찜": "버섯 대파계란찜",
+    "치즈 브로콜리 감자볼": "브로콜리 치즈감자볼",
+    "치즈 양송이 달걀 팬그라탕": "버섯 치즈계란그라탕",
+    "치즈 양파 돼지고기 미니볼": "돼지고기 치즈미니볼",
+}
+
+METHOD_NAME_REPLACEMENTS = {
+    "호일구이": "촉촉찜",
+    "에어프라이어구이": "구이",
+    "에어프라이어": "구이",
+    "팬구이": "구이",
+    "꼬치구이": "한입구이",
+    "꼬치": "한입구이",
+}
+
+PLACEHOLDER_STEP_TITLE_REPLACEMENTS = {
+    "나머지 손질": "추가 재료 손질",
+    "잠깐 식히기": "한김 식히기",
+}
+
 
 def _has_batchim(text: str) -> bool:
     for char in reversed(text):
@@ -307,6 +428,126 @@ def _polish_ingredient_list_phrase(text: str, names: str) -> str:
     return text.replace(f"{names} 재료를", f"{names}{_choose_josa(names, '을/를')}")
 
 
+def _ingredient_keys(recipe: dict[str, Any]) -> set[str]:
+    return {
+        str(detail.get("item_name", "")).strip()
+        for detail in recipe.get("ingredient_details", [])
+        if isinstance(detail, dict)
+    }
+
+
+def _normalize_broad_ingredient_details(recipe: dict[str, Any]) -> None:
+    for detail in recipe.get("ingredient_details", []):
+        if not isinstance(detail, dict):
+            continue
+        policy = BROAD_INGREDIENT_POLICIES.get(str(detail.get("item_name", "")).strip())
+        if not policy:
+            continue
+        detail["display_name"] = policy["display_name"]
+        detail["variant_detail"] = policy["variant_detail"]
+
+
+def _collapse_duplicate_broad_terms(text: str) -> str:
+    for policy in BROAD_INGREDIENT_POLICIES.values():
+        name = policy["text_name"]
+        text = re.sub(rf"(?:{re.escape(name)}\s*){{2,}}", name, text)
+    return text
+
+
+def _safe_broad_ingredient_text(text: str, recipe: dict[str, Any]) -> str:
+    keys = _ingredient_keys(recipe)
+    for ingredient_key, policy in BROAD_INGREDIENT_POLICIES.items():
+        if ingredient_key not in keys:
+            continue
+        for term in sorted(policy["replacements"], key=len, reverse=True):
+            text = text.replace(term, policy["text_name"])
+    return _collapse_duplicate_broad_terms(text)
+
+
+def _remove_opaque_ingredient_counts(text: str, recipe: dict[str, Any]) -> str:
+    names = _ingredient_detail_names(recipe)
+    if not names:
+        return text
+    joined_names = ", ".join(names)
+    text = re.sub(
+        r"((?:[가-힣A-Za-z0-9·]+\s*,\s*)*[가-힣A-Za-z0-9·]+),\s*외 \d+가지",
+        joined_names,
+        text,
+    )
+    text = re.sub(r"외 \d+가지의", f"{joined_names}의", text)
+    text = re.sub(r"외 \d+가지", joined_names, text)
+    return text
+
+
+def _step_text(recipe: dict[str, Any]) -> str:
+    steps = recipe.get("recipe_steps", [])
+    if not isinstance(steps, list):
+        return ""
+    return " ".join(
+        f"{step.get('title', '')} {step.get('instruction', '')}"
+        for step in steps
+        if isinstance(step, dict)
+    )
+
+
+def _polish_step_titles(recipe: dict[str, Any]) -> None:
+    steps = recipe.get("recipe_steps", [])
+    if not isinstance(steps, list):
+        return
+    for step in steps:
+        if not isinstance(step, dict):
+            continue
+        title = step.get("title")
+        if title in PLACEHOLDER_STEP_TITLE_REPLACEMENTS:
+            step["title"] = PLACEHOLDER_STEP_TITLE_REPLACEMENTS[title]
+
+
+def _polish_method_consistency(recipe: dict[str, Any]) -> None:
+    name = str(recipe.get("name", ""))
+    steps = _step_text(recipe)
+    for method_name, required_term in METHOD_NAME_RULES.items():
+        if method_name not in name or required_term in steps:
+            continue
+        name = name.replace(method_name, METHOD_NAME_REPLACEMENTS[method_name])
+    recipe["name"] = _fix_particles(name)
+
+
+def _polish_recipe_name(recipe: dict[str, Any]) -> None:
+    name = str(recipe.get("name", "")).strip()
+    if not name:
+        return
+    name = _safe_broad_ingredient_text(name, recipe)
+    name = _remove_opaque_ingredient_counts(name, recipe)
+    for before, after in sorted(NAME_REPLACEMENTS.items(), key=lambda item: len(item[0]), reverse=True):
+        name = name.replace(before, after)
+    recipe["name"] = _fix_particles(name)
+
+
+def _ensure_unique_recipe_names(recipes: list[dict[str, Any]]) -> None:
+    seen_by_liquor: dict[str, set[str]] = {}
+    for recipe in recipes:
+        liquor_name = str(recipe.get("liquor_name", "")).strip()
+        seen = seen_by_liquor.setdefault(liquor_name, set())
+        name = str(recipe.get("name", "")).strip()
+        if name not in seen:
+            seen.add(name)
+            continue
+
+        display_names = _ingredient_detail_names(recipe)
+        suffix_candidates = [
+            display_names[index]
+            for index in range(1, len(display_names))
+            if display_names[index] not in name
+        ]
+        suffix_candidates.extend(["간장", "버터", "레몬", "허브", "한입"])
+        for suffix in suffix_candidates:
+            candidate = _fix_particles(f"{suffix} {name}")
+            if candidate not in seen:
+                recipe["name"] = candidate
+                seen.add(candidate)
+                break
+
+
 def _polish_generic_recipe_words(text: str, recipe: dict[str, Any]) -> str:
     primary = _primary_ingredient_name(recipe)
     remaining = _remaining_ingredient_names(recipe)
@@ -363,10 +604,15 @@ def _polish_generic_recipe_words(text: str, recipe: dict[str, Any]) -> str:
 
 def _polish_text(text: str, recipe: dict[str, Any] | None = None) -> str:
     if recipe is not None:
+        text = _safe_broad_ingredient_text(text, recipe)
+        text = _remove_opaque_ingredient_counts(text, recipe)
         text = _neutralize_style_references(text, recipe)
         text = _polish_ingredient_list_phrase(text, _ingredient_names(recipe))
         text = _polish_generic_recipe_words(text, recipe)
     text = _polish_template_phrases(text)
+    if recipe is not None:
+        text = _safe_broad_ingredient_text(text, recipe)
+        text = _remove_opaque_ingredient_counts(text, recipe)
     text = _fix_particles(text)
     text = text.replace("  ", " ")
     return text
@@ -384,7 +630,7 @@ def _polish_tags(recipe: dict[str, Any]) -> None:
             continue
         if tag.strip() in style_terms:
             continue
-        polished_tags.append(_polish_text(tag, recipe))
+        polished_tags.append(_safe_broad_ingredient_text(_polish_text(tag, recipe), recipe))
     if style_terms and liquor_name not in polished_tags:
         polished_tags.append(liquor_name)
     recipe["tags"] = list(dict.fromkeys(polished_tags))
@@ -422,6 +668,8 @@ def polish_payload(payload: dict[str, Any]) -> dict[str, Any]:
     for recipe in recipes:
         if not isinstance(recipe, dict):
             continue
+        _normalize_broad_ingredient_details(recipe)
+        _polish_recipe_name(recipe)
         for key in (
             "reason",
             "priority_reason",
@@ -433,8 +681,11 @@ def polish_payload(payload: dict[str, Any]) -> dict[str, Any]:
         ):
             if key in recipe:
                 recipe[key] = _polish_value(recipe[key], recipe)
+        _polish_step_titles(recipe)
+        _polish_method_consistency(recipe)
         _polish_tags(recipe)
         _rebuild_legacy_recipe_steps(recipe)
+    _ensure_unique_recipe_names([recipe for recipe in recipes if isinstance(recipe, dict)])
     return payload
 
 

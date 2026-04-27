@@ -28,6 +28,8 @@ RECOMMENDATIONS_RESPONSE_EXAMPLE = {
                 "ingredient_logic": "돼지고기와 대파를 팬구이 방식으로 조리해 구운 향과 단맛을 살렸어요.",
                 "why_this_liquor": "소주는 기름진 고기 안주의 끝맛을 가볍게 정리해주기 좋아요.",
             },
+            "ingredient_yes": ["대파", "상추"],
+            "ingredient_no": ["돼지고기"],
             "ingredient_details": [
                 {
                     "item_name": "pork",
@@ -173,8 +175,16 @@ class RecommendationItem(BaseModel):
     pairing_knowledge: RecommendationPairingKnowledge = Field(
         description="주류 페어링 지식"
     )
+    ingredient_yes: list[str] = Field(
+        description="현재 재고에 있어 바로 사용할 수 있는 필요 재료의 한글 이름"
+    )
+    ingredient_no: list[str] = Field(
+        description="현재 재고에 없어 추가로 필요한 필요 재료의 한글 이름"
+    )
     ingredient_details: list[RecommendationIngredientDetail] = Field(
-        description="정량화된 재료 목록과 현재 보유 상태"
+        min_length=1,
+        max_length=30,
+        description="정량화된 재료 목록과 현재 보유 상태입니다. 레시피에 따라 1개부터 30개까지 내려갈 수 있습니다.",
     )
     pantry_items: list[str] = Field(description="상온에 기본 보유한다고 가정하는 양념/재료")
     pantry_item_details: list[RecommendationPantryItem] = Field(

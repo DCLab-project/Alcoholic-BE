@@ -165,15 +165,18 @@ total_score = 2 * 3 - 2 * 2 + 94 = 96
 이 정렬 기준은 같은 점수 후보가 여러 개일 때 결과가 매번 흔들리지 않게 하기 위한 안전장치입니다.
 
 ## 7. `refresh` 동작
-추천 API는 `refresh=false`일 때 `refresh_group=0` 후보를 우선 사용합니다.
+추천 API는 `refresh=false`일 때 현재 재고 기준으로 점수가 높은 상위 3개 후보를 먼저 반환합니다.
 
-`refresh=true`일 때는 `refresh_group=1` 후보를 우선 사용합니다.
-만약 해당 주류의 `refresh_group=1` 후보가 없으면 `refresh_group=0`으로 fallback합니다.
+`refresh=true`일 때는 같은 정렬 결과에서 다음 3개 후보를 반환합니다.
+후보 끝까지 도달하면 다시 앞쪽 후보로 순환합니다.
+
+`refresh_group`은 seed 후보의 성격을 나누는 보조 메타데이터로 유지하지만, API 응답은 두 묶음에 고정하지 않습니다.
+기존 `refresh_group=0`, `refresh_group=1` 값은 seed 검수와 후보 다양성 확인에 계속 사용합니다.
 
 목표:
 
 - 첫 추천은 안정적인 대표 후보 제공
-- 다른 추천 보기는 성격이 다른 후보 제공
+- 다른 추천 보기는 가능한 한 새로운 후보 제공
 - 후보 부족 상황에서도 빈 응답을 피함
 
 ## 8. `missing_ingredients` 원칙
