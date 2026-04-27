@@ -174,7 +174,9 @@ class RecommendationItem(BaseModel):
         description="주류 페어링 지식"
     )
     ingredient_details: list[RecommendationIngredientDetail] = Field(
-        description="정량화된 재료 목록과 현재 보유 상태"
+        min_length=1,
+        max_length=30,
+        description="정량화된 재료 목록과 현재 보유 상태입니다. 레시피에 따라 1개부터 30개까지 내려갈 수 있습니다.",
     )
     pantry_items: list[str] = Field(description="상온에 기본 보유한다고 가정하는 양념/재료")
     pantry_item_details: list[RecommendationPantryItem] = Field(

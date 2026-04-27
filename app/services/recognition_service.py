@@ -1,5 +1,6 @@
 import asyncio
 from datetime import datetime, timezone
+from random import choice
 
 from app.db import SessionLocal
 from app.schemas.recognition import (
@@ -23,6 +24,17 @@ from app.services.name_mapping import (
     normalize_liquor_key,
 )
 from app.services.recommendation_service import RecommendationService
+
+
+MOCK_LIQUOR_SCAN_CANDIDATES: tuple[str, ...] = (
+    "soju",
+    "beer",
+    "red_wine",
+    "white_wine",
+    "sparkling_wine",
+    "whisky",
+    "sake",
+)
 
 
 class RecognitionService:
@@ -73,7 +85,7 @@ class RecognitionService:
         # mock 주류 인식 결과를 발행합니다.
         await asyncio.sleep(3.0)
         payload = LiquorLiveRecognitionCreate(
-            liquor_name="soju",
+            liquor_name=choice(MOCK_LIQUOR_SCAN_CANDIDATES),
             timestamp=datetime.now(timezone.utc),
             confidence=0.99,
             source=f"manual_scan_mock:{device_id}",

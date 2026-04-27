@@ -20,8 +20,9 @@ class InventoryListResponse(BaseModel):
 
 class InventoryBulkCreate(BaseModel):
     items: list[str] = Field(
-        default_factory=list,
-        description="최종 저장할 식재료 이름 배열입니다. 한글명과 내부 key를 모두 허용하며, 같은 이름이 여러 번 들어오면 수량이 그만큼 증가합니다.",
+        min_length=1,
+        max_length=30,
+        description="최종 저장할 식재료 이름 배열입니다. 1개부터 30개까지 받을 수 있고, 한글명과 내부 key를 모두 허용하며, 같은 이름이 여러 번 들어오면 수량이 그만큼 증가합니다.",
         examples=[["대파", "green_onion", "양파"]],
     )
 

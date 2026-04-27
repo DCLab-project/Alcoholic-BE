@@ -6,6 +6,7 @@ import unittest
 from collections import Counter, defaultdict
 from pathlib import Path
 
+from pydantic import ValidationError
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -22,6 +23,7 @@ from app.services.name_mapping import (
     normalize_ingredient_key,
     normalize_liquor_key,
 )
+from app.services.recognition_service import MOCK_LIQUOR_SCAN_CANDIDATES
 from app.services.recommendation_service import RecommendationService
 
 
@@ -135,6 +137,41 @@ FORBIDDEN_GENERIC_PHRASES = {
     "나머지 재료",
     "준비한 재료",
     "향이 나는 재료",
+    "먹기 좋은 크기",
+    "양념 재료",
+    "준비한 양념",
+    "단단한 재료",
+    "부드러운 재료",
+    "향을 낼 채소",
+    "기름이나 버터",
+    "재료가 속까지 익도록",
+    "설명한 상태",
+    "채소나 버섯",
+    "나머지 채소",
+    "두꺼운 채소",
+}
+
+FORBIDDEN_BAD_GRAMMAR_PHRASES = {
+    "소고기을",
+    "돼지고기을",
+    "닭고기을",
+    "흰살생선을 겹치지",
+    "가지을",
+    "감자을",
+    "오이은",
+    "상추은",
+    "토마토은",
+    "방울토마토은",
+    "양파은",
+    "마늘이 있으면",
+}
+
+BROAD_KEY_UNSAFE_TERMS = {
+    "fish": {"대구", "대구살", "동태", "연어", "도미", "광어"},
+    "pork": {"목살", "삼겹살", "앞다리살", "대패", "돼지안심"},
+    "chicken": {"닭다리살", "닭가슴살", "닭안심"},
+    "mushroom": {"팽이버섯", "느타리", "양송이", "표고"},
+    "cheese": {"체다", "모짜렐라", "파마산", "리코타", "크림치즈"},
 }
 
 
@@ -199,9 +236,52 @@ class SeedQualityGateTest(unittest.TestCase):
         self.assertEqual([], found)
 
     def test_seed_has_no_bad_or_template_phrases(self) -> None:
-        forbidden = FORBIDDEN_BAD_PHRASES | FORBIDDEN_GENERIC_PHRASES
+        forbidden = (
+            FORBIDDEN_BAD_PHRASES
+            | FORBIDDEN_GENERIC_PHRASES
+            | FORBIDDEN_BAD_GRAMMAR_PHRASES
+        )
         found = [term for term in sorted(forbidden) if term in self.seed_text]
         self.assertEqual([], found)
+
+    def test_all_recipes_have_service_grade_cooking_steps(self) -> None:
+        for recipe in self.recipes:
+            with self.subTest(recipe=recipe["name"]):
+                self.assertGreaterEqual(len(recipe["recipe_steps"]), 6)
+                recipe_text = " ".join(flatten_strings(recipe))
+                found = [
+                    phrase
+                    for phrase in sorted(FORBIDDEN_GENERIC_PHRASES)
+                    if phrase in recipe_text
+                ]
+                self.assertEqual([], found)
+
+                for step in recipe["recipe_steps"]:
+                    self.assertRegex(step["instruction"], r"\d")
+
+    def test_recipes_do_not_overclaim_broad_ingredient_variants(self) -> None:
+        for recipe in self.recipes:
+            recipe_text = " ".join(
+                [
+                    recipe["name"],
+                    recipe["reason"],
+                    recipe["pairing_knowledge"]["flavor_logic"],
+                    recipe["pairing_knowledge"]["ingredient_logic"],
+                    recipe["pairing_knowledge"]["why_this_liquor"],
+                    " ".join(step["instruction"] for step in recipe["recipe_steps"]),
+                    " ".join(ingredient["display_name"] for ingredient in recipe["ingredient_details"]),
+                ]
+            )
+            ingredient_keys = {
+                ingredient["item_name"] for ingredient in recipe["ingredient_details"]
+            }
+
+            for ingredient_key, unsafe_terms in BROAD_KEY_UNSAFE_TERMS.items():
+                if ingredient_key not in ingredient_keys:
+                    continue
+                with self.subTest(recipe=recipe["name"], ingredient_key=ingredient_key):
+                    found = [term for term in sorted(unsafe_terms) if term in recipe_text]
+                    self.assertEqual([], found)
 
     def test_recipe_names_are_unique_per_liquor(self) -> None:
         names_by_liquor: dict[str, list[str]] = defaultdict(list)
@@ -219,7 +299,8 @@ class SeedQualityGateTest(unittest.TestCase):
                 self.assertGreaterEqual(recipe["rank_hint"], 60)
                 self.assertLessEqual(recipe["rank_hint"], 100)
                 self.assertIn(recipe["difficulty"], DIFFICULTIES)
-                self.assertGreaterEqual(len(recipe["ingredient_details"]), 3)
+                self.assertGreaterEqual(len(recipe["ingredient_details"]), 1)
+                self.assertLessEqual(len(recipe["ingredient_details"]), 30)
                 self.assertGreaterEqual(len(recipe["pantry_items"]), 2)
                 self.assertGreaterEqual(len(recipe["recipe_steps"]), 4)
                 self.assertTrue(recipe["reason"].endswith("요."))
@@ -253,8 +334,19 @@ class MappingQualityGateTest(unittest.TestCase):
     def test_liquor_mapping_accepts_korean_and_internal_keys(self) -> None:
         self.assertEqual("red_wine", normalize_liquor_key("레드와인"))
         self.assertEqual("red_wine", normalize_liquor_key("red_wine"))
+        self.assertEqual("red_wine", normalize_liquor_key("와인"))
+        self.assertEqual("red_wine", normalize_liquor_key("wine"))
+        self.assertEqual("beer", normalize_liquor_key("beer"))
+        self.assertEqual("whisky", normalize_liquor_key("whisky"))
         self.assertEqual("sparkling_wine", normalize_liquor_key("스파클링와인"))
         self.assertEqual("스파클링와인", liquor_display_name("sparkling_wine"))
+
+    def test_manual_scan_mock_covers_all_seed_liquors(self) -> None:
+        self.assertEqual(
+            set(EXPECTED_LIQUOR_COUNTS),
+            set(MOCK_LIQUOR_SCAN_CANDIDATES),
+        )
+        self.assertEqual(7, len(MOCK_LIQUOR_SCAN_CANDIDATES))
 
 
 class PolicyDocumentationQualityGateTest(unittest.TestCase):
@@ -280,9 +372,25 @@ class PolicyDocumentationQualityGateTest(unittest.TestCase):
 
 
 class SwaggerDocumentationQualityGateTest(unittest.TestCase):
+    def test_inventory_bulk_accepts_one_to_thirty_items(self) -> None:
+        self.assertEqual(["대파"], InventoryBulkCreate(items=["대파"]).items)
+        self.assertEqual(30, len(InventoryBulkCreate(items=["대파"] * 30).items))
+
+        with self.assertRaises(ValidationError):
+            InventoryBulkCreate(items=[])
+
+        with self.assertRaises(ValidationError):
+            InventoryBulkCreate(items=["대파"] * 31)
+
     def test_recommendation_response_schema_has_realistic_example(self) -> None:
         schema = RecommendationsResponse.model_json_schema()
         example = schema.get("example")
+        recommendation_schema = schema["$defs"]["RecommendationItem"]["properties"][
+            "ingredient_details"
+        ]
+
+        self.assertEqual(1, recommendation_schema["minItems"])
+        self.assertEqual(30, recommendation_schema["maxItems"])
 
         self.assertIsInstance(example, dict)
         self.assertEqual("소주", example["liquor"])

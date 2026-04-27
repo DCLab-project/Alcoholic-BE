@@ -112,7 +112,7 @@ _LIQUOR_ALIASES: dict[str, tuple[str, ...]] = {
     "soju": ("소주",),
     "beer": ("맥주",),
     "white_wine": ("화이트와인", "화이트 와인", "whitewine"),
-    "red_wine": ("레드와인", "레드 와인", "redwine"),
+    "red_wine": ("레드와인", "레드 와인", "와인", "redwine", "wine"),
     "whisky": ("위스키", "whiskey"),
     "sparkling_wine": (
         "스파클링와인",
