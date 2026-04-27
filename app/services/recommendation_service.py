@@ -17,11 +17,13 @@ from app.schemas.recommendation import (
     RecommendationsResponse,
 )
 from app.services.name_mapping import (
-    ingredient_display_name,
     liquor_display_name,
     normalize_ingredient_key,
     normalize_liquor_key,
 )
+
+
+_RECOMMENDATION_REFRESH_CURSORS: dict[str, int] = {}
 
 
 class RecommendationService:
@@ -160,6 +162,42 @@ class RecommendationService:
             if isinstance(tag, str) and tag.strip()
         ]
 
+    @staticmethod
+    def _inventory_signature(inventory_counts: dict[str, int]) -> str:
+        return "|".join(
+            f"{ingredient_key}:{inventory_counts[ingredient_key]}"
+            for ingredient_key in sorted(inventory_counts)
+        )
+
+    @classmethod
+    def _select_ranked_candidates(
+        cls,
+        ranked_candidates: list[dict[str, Any]],
+        *,
+        liquor_key: str,
+        refresh: bool,
+        inventory_counts: dict[str, int],
+    ) -> list[dict[str, Any]]:
+        if not ranked_candidates:
+            return []
+
+        cursor_key = f"{liquor_key}:{cls._inventory_signature(inventory_counts)}"
+        page_size = min(3, len(ranked_candidates))
+
+        if not refresh:
+            _RECOMMENDATION_REFRESH_CURSORS[cursor_key] = page_size % len(ranked_candidates)
+            return ranked_candidates[:page_size]
+
+        start_index = _RECOMMENDATION_REFRESH_CURSORS.get(cursor_key, page_size)
+        selected = [
+            ranked_candidates[(start_index + offset) % len(ranked_candidates)]
+            for offset in range(page_size)
+        ]
+        _RECOMMENDATION_REFRESH_CURSORS[cursor_key] = (
+            start_index + page_size
+        ) % len(ranked_candidates)
+        return selected
+
     def get_recommendations(self, liquor: str, refresh: bool) -> RecommendationsResponse:
         normalized = normalize_liquor_key(liquor or "soju") or "soju"
         inventory_counts: dict[str, int] = {}
@@ -170,7 +208,7 @@ class RecommendationService:
             inventory_counts[ingredient_key] = (
                 inventory_counts.get(ingredient_key, 0) + item.count
             )
-        candidates = self.recommendation_repository.list_recipe_candidates(normalized, refresh)
+        candidates = self.recommendation_repository.list_recipe_candidates(normalized)
         ranked_candidates: list[dict] = []
 
         for recipe in candidates:
@@ -197,6 +235,16 @@ class RecommendationService:
                 )
                 for ingredient in recipe.ingredients
             ]
+            ingredient_yes = [
+                detail.display_name
+                for detail in ingredient_details
+                if detail.status == "available"
+            ]
+            ingredient_no = [
+                detail.display_name
+                for detail in ingredient_details
+                if detail.status == "missing"
+            ]
             ranked_candidates.append(
                 {
                     "score": score,
@@ -206,6 +254,8 @@ class RecommendationService:
                     "available_count": available_count,
                     "total_required": len(required_ingredients),
                     "missing_ingredients": missing_ingredients,
+                    "ingredient_yes": ingredient_yes,
+                    "ingredient_no": ingredient_no,
                     "ingredient_details": ingredient_details,
                     "recipe": recipe,
                 }
@@ -219,8 +269,15 @@ class RecommendationService:
                 candidate["name"],
             )
         )
+        selected_candidates = self._select_ranked_candidates(
+            ranked_candidates,
+            liquor_key=normalized,
+            refresh=refresh,
+            inventory_counts=inventory_counts,
+        )
+
         recommendations: list[RecommendationItem] = []
-        for index, candidate in enumerate(ranked_candidates[:3], start=1):
+        for index, candidate in enumerate(selected_candidates, start=1):
             recipe = candidate["recipe"]
             recommendations.append(
                 RecommendationItem(
@@ -249,6 +306,8 @@ class RecommendationService:
                     cook_time_minutes=recipe.cook_time_minutes,
                     difficulty=recipe.difficulty,
                     pairing_knowledge=self._build_pairing_knowledge(recipe),
+                    ingredient_yes=candidate["ingredient_yes"],
+                    ingredient_no=candidate["ingredient_no"],
                     ingredient_details=candidate["ingredient_details"],
                     pantry_items=[
                         item for item in recipe.pantry_items_text.splitlines() if item.strip()
@@ -256,10 +315,7 @@ class RecommendationService:
                     pantry_item_details=self._build_pantry_item_details(recipe),
                     recipe=[step for step in recipe.instructions_text.splitlines() if step],
                     recipe_steps=self._build_recipe_steps(recipe),
-                    missing_ingredients=[
-                        ingredient_display_name(ingredient_name)
-                        for ingredient_name in candidate["missing_ingredients"]
-                    ],
+                    missing_ingredients=candidate["ingredient_no"],
                     tip=recipe.tip,
                     tags=self._build_tags(recipe),
                 )

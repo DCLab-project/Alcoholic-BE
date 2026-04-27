@@ -60,6 +60,8 @@
 - `servings`
 - `cook_time_minutes`
 - `difficulty`
+- `ingredient_yes`
+- `ingredient_no`
 - `ingredient_details`
 - `pantry_items`
 - `recipe_steps`
@@ -74,6 +76,8 @@
 - `servings`: 기본 인분 수
 - `cook_time_minutes`: 예상 조리 시간
 - `difficulty`: FE에서 배지나 텍스트로 보여줄 난이도
+- `ingredient_yes`: 현재 재고에 있어 바로 사용할 수 있는 필요 재료의 한글명 배열
+- `ingredient_no`: 현재 재고에 없어 추가로 필요한 필요 재료의 한글명 배열
 - `ingredient_details`: 내부 key + 한글명 + 정량 + 단위
 - `pantry_items`: 상온 기본 보유 양념/재료
 - `recipe_steps`: 상세 조리 단계

@@ -398,6 +398,8 @@ class SwaggerDocumentationQualityGateTest(unittest.TestCase):
 
         first = example["recommendations"][0]
         self.assertEqual(["돼지고기"], first["missing_ingredients"])
+        self.assertEqual(["대파", "상추"], first["ingredient_yes"])
+        self.assertEqual(["돼지고기"], first["ingredient_no"])
         self.assertIn("recipe_steps", first)
         self.assertIn("pairing_knowledge", first)
         self.assertIn("score_breakdown", first)
@@ -521,6 +523,48 @@ class ServiceQualityGateTest(unittest.TestCase):
 
         self.assertEqual(3, len(response.recommendations))
         self.assertLess(elapsed_seconds, 1.0)
+
+    def test_recommendation_exposes_simple_ingredient_availability_lists(self) -> None:
+        self.db.add_all(
+            [
+                InventoryItem(item_name="green_onion", count=1),
+                InventoryItem(item_name="garlic", count=1),
+            ]
+        )
+        self.db.commit()
+
+        response = RecommendationService(self.db).get_recommendations("소주", False)
+
+        self.assertEqual(3, len(response.recommendations))
+        for recommendation in response.recommendations:
+            expected_yes = [
+                detail.display_name
+                for detail in recommendation.ingredient_details
+                if detail.status == "available"
+            ]
+            expected_no = [
+                detail.display_name
+                for detail in recommendation.ingredient_details
+                if detail.status == "missing"
+            ]
+
+            self.assertEqual(expected_yes, recommendation.ingredient_yes)
+            self.assertEqual(expected_no, recommendation.ingredient_no)
+            self.assertEqual(expected_no, recommendation.missing_ingredients)
+
+    def test_refresh_rotates_beyond_two_recommendation_sets(self) -> None:
+        service = RecommendationService(self.db)
+        seen_names: list[str] = []
+
+        response = service.get_recommendations("소주", False)
+        seen_names.extend(item.name for item in response.recommendations)
+
+        for _ in range(3):
+            response = service.get_recommendations("소주", True)
+            seen_names.extend(item.name for item in response.recommendations)
+
+        self.assertEqual(12, len(seen_names))
+        self.assertGreaterEqual(len(set(seen_names)), 9)
 
     def test_all_liquor_recommendation_responses_are_display_safe(self) -> None:
         service = RecommendationService(self.db)
