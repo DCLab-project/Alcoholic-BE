@@ -189,6 +189,84 @@ METHOD_NAME_RULES = {
     "꼬치": {"꼬치"},
 }
 
+LIQUOR_TAGS = {
+    "소주",
+    "맥주",
+    "레드와인",
+    "화이트와인",
+    "스파클링와인",
+    "위스키",
+    "사케",
+}
+
+METHOD_TERMS = {
+    "감자볼": {"에어프라이어"},
+    "겹구이": {"구이", "팬구이", "에어프라이어"},
+    "그라탕": {"그라탕"},
+    "꼬치": {"꼬치구이"},
+    "냉채": {"냉채", "무침"},
+    "감자전": {"전"},
+    "달걀말이": {"달걀말이"},
+    "달걀전": {"전"},
+    "달걀찜": {"달걀찜"},
+    "딥": {"딥"},
+    "롤": {"말이구이"},
+    "말이구이": {"말이구이"},
+    "무침": {"무침"},
+    "미니볼": {"팬구이"},
+    "미니전": {"전"},
+    "브루스케타": {"오픈샌드"},
+    "볶음": {"볶음"},
+    "샐러드": {"샐러드"},
+    "소금구이": {"팬구이", "구이"},
+    "수프": {"수프"},
+    "스튜": {"스튜"},
+    "오픈샌드": {"오픈샌드"},
+    "전골": {"전골"},
+    "찜": {"찜", "달걀찜"},
+    "조림": {"조림"},
+    "카르파초": {"샐러드"},
+    "칩": {"에어프라이어"},
+    "핀초": {"샐러드"},
+    "보트": {"에어프라이어"},
+    "버섯말이": {"말이구이"},
+    "치즈말이": {"말이구이"},
+    "요거트컵": {"샐러드"},
+    "달걀컵": {"에어프라이어"},
+    "에그컵": {"에어프라이어"},
+    "달걀탕": {"탕"},
+    "맑은탕": {"탕"},
+    "팬구이": {"팬구이"},
+    "프리타타": {"팬구이"},
+    "해시": {"팬구이"},
+    "호일구이": {"에어프라이어", "팬구이", "구이"},
+    "구이": {"구이", "팬구이", "에어프라이어", "꼬치구이", "말이구이"},
+}
+
+METHOD_TAGS = sorted(
+    {tag for tags in METHOD_TERMS.values() for tag in tags},
+    key=len,
+    reverse=True,
+)
+
+NEAR_DUPLICATE_FILLER = {
+    "구운",
+    "맑은",
+    "바삭",
+    "버터",
+    "갈릭",
+    "레몬",
+    "허브",
+    "후추",
+    "촉촉",
+    "폭신",
+    "부드러운",
+    "산뜻",
+    "스모키",
+    "한입",
+    "미니",
+}
+
 
 def load_seed_payload() -> dict:
     return json.loads(SEED_PATH.read_text(encoding="utf-8"))
@@ -228,6 +306,38 @@ def make_test_session():
         expire_on_commit=False,
     )
     return engine, testing_session()
+
+
+def recipe_core_signature(recipe: dict) -> tuple[str, ...]:
+    return tuple(sorted(detail["item_name"] for detail in recipe["ingredient_details"]))
+
+
+def recipe_method_signature(recipe: dict) -> str:
+    tags = set(recipe["tags"])
+    for method in METHOD_TAGS:
+        if method in tags:
+            return method
+    for term, accepted_tags in METHOD_TERMS.items():
+        if term in recipe["name"]:
+            return sorted(accepted_tags)[0]
+    return "unknown"
+
+
+def recipe_tag_signature(recipe: dict) -> tuple[str, ...]:
+    ignored = LIQUOR_TAGS | set(METHOD_TAGS)
+    ingredient_tags = {
+        detail["display_name"]
+        for detail in recipe["ingredient_details"]
+        if detail.get("display_name")
+    }
+    return tuple(sorted(tag for tag in recipe["tags"] if tag not in ignored | ingredient_tags))
+
+
+def normalized_recipe_name(name: str) -> str:
+    normalized = name.replace(" ", "")
+    for filler in NEAR_DUPLICATE_FILLER:
+        normalized = normalized.replace(filler, "")
+    return normalized
 
 
 class SeedQualityGateTest(unittest.TestCase):
@@ -337,6 +447,49 @@ class SeedQualityGateTest(unittest.TestCase):
         for liquor_name, names in names_by_liquor.items():
             with self.subTest(liquor_name=liquor_name):
                 self.assertEqual(len(names), len(set(names)))
+
+    def test_recipe_names_are_globally_unique_after_normalization(self) -> None:
+        indexed_names: dict[str, list[str]] = defaultdict(list)
+        for recipe in self.recipes:
+            indexed_names[normalized_recipe_name(recipe["name"])].append(recipe["name"])
+
+        near_duplicates = {
+            key: names
+            for key, names in indexed_names.items()
+            if len(set(names)) > 1
+        }
+        self.assertEqual({}, near_duplicates)
+
+    def test_recipe_core_method_signatures_are_unique_per_liquor(self) -> None:
+        indexed_signatures: dict[tuple, list[str]] = defaultdict(list)
+        for recipe in self.recipes:
+            signature = (
+                recipe["liquor_name"],
+                recipe_core_signature(recipe),
+                recipe_method_signature(recipe),
+                recipe_tag_signature(recipe),
+            )
+            indexed_signatures[signature].append(recipe["name"])
+
+        duplicates = {
+            signature: names
+            for signature, names in indexed_signatures.items()
+            if len(names) > 1
+        }
+        self.assertEqual({}, duplicates)
+
+    def test_recipe_names_match_declared_cooking_method_tags(self) -> None:
+        for recipe in self.recipes:
+            tags = set(recipe["tags"])
+            matched_method = False
+            for term, accepted_tags in METHOD_TERMS.items():
+                if term not in recipe["name"]:
+                    continue
+                matched_method = True
+                with self.subTest(recipe=recipe["name"], term=term):
+                    self.assertTrue(tags & accepted_tags)
+            with self.subTest(recipe=recipe["name"], term="method_term"):
+                self.assertTrue(matched_method)
 
     def test_recipe_schema_and_content_constraints(self) -> None:
         for recipe in self.recipes:
