@@ -67,13 +67,13 @@ ALLOWED_INGREDIENT_KEYS = {
 }
 
 EXPECTED_LIQUOR_COUNTS = {
-    "soju": 40,
-    "beer": 40,
-    "red_wine": 40,
-    "white_wine": 40,
-    "sparkling_wine": 40,
-    "whisky": 40,
-    "sake": 40,
+    "soju": 50,
+    "beer": 50,
+    "red_wine": 50,
+    "white_wine": 50,
+    "sparkling_wine": 50,
+    "whisky": 50,
+    "sake": 50,
 }
 
 LIQUOR_DISPLAY_NAMES = {
