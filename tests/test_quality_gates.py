@@ -35,6 +35,9 @@ README_PATH = ROOT_DIR / "README.md"
 EVENT_ROUTE_PATH = ROOT_DIR / "app" / "api" / "routes" / "events.py"
 OPERATIONS_READINESS_PATH = ROOT_DIR / "docs" / "operations_readiness.md"
 DB_INIT_SCRIPT_PATH = ROOT_DIR / "scripts" / "initialize_database.py"
+FE_API_CONTRACT_PATH = ROOT_DIR / "docs" / "api_contract_fe.md"
+AI_API_CONTRACT_PATH = ROOT_DIR / "docs" / "api_contract_ai.md"
+API_CHANGE_WORKFLOW_PATH = ROOT_DIR / "docs" / "api_change_workflow.md"
 
 ALLOWED_INGREDIENT_KEYS = {
     "bacon",
@@ -373,6 +376,9 @@ class MappingQualityGateTest(unittest.TestCase):
     def test_ingredient_mapping_accepts_korean_and_internal_keys(self) -> None:
         self.assertEqual("green_onion", normalize_ingredient_key("대파"))
         self.assertEqual("green_onion", normalize_ingredient_key("green_onion"))
+        self.assertEqual("green_onion", normalize_ingredient_key("leek"))
+        self.assertEqual("green_onion", normalize_ingredient_key("scallion"))
+        self.assertEqual("green_onion", normalize_ingredient_key("spring_onion"))
         self.assertEqual("pepper", normalize_ingredient_key("파프리카"))
         self.assertEqual("대파", ingredient_display_name("green_onion"))
         self.assertEqual("파프리카", ingredient_display_name("pepper"))
@@ -457,6 +463,45 @@ class SwaggerDocumentationQualityGateTest(unittest.TestCase):
         example_text = json.dumps(example, ensure_ascii=False)
         self.assertNotIn('"liquor": "soju"', example_text)
         self.assertNotIn('"missing_ingredients": ["pork"', example_text)
+
+    def test_api_contract_docs_cover_fe_and_ai_handoff_fields(self) -> None:
+        fe_contract = FE_API_CONTRACT_PATH.read_text(encoding="utf-8")
+        ai_contract = AI_API_CONTRACT_PATH.read_text(encoding="utf-8")
+        workflow = API_CHANGE_WORKFLOW_PATH.read_text(encoding="utf-8")
+
+        fe_required_terms = [
+            "`/api/v1/recommendations`",
+            "`/api/v1/stream/recommendations`",
+            "ingredient_yes",
+            "ingredient_no",
+            "missing_ingredients",
+            "ingredient_details[].status",
+            "pepper`는 고추가 아니라 파프리카",
+        ]
+        ai_required_terms = [
+            "POST `/api/v1/recognitions/ingredients`",
+            "POST `/api/v1/recognitions/liquor`",
+            "leek`, `scallion`, `spring_onion`",
+            "BE에서 `green_onion`으로 정규화",
+            "ginger`는 AI label에는 있을 수 있지만 추천 seed core ingredient로 사용하지 않습니다",
+            "soju, beer, red_wine, white_wine, sparkling_wine, whisky, sake",
+        ]
+        workflow_required_terms = [
+            "main 직접 push/merge 금지",
+            "새 기능/수정은 GitHub issue 먼저 생성",
+            "Sheet Template",
+            "기존 FE 응답 필드는 깨지지 않게 additive change 우선",
+        ]
+
+        for term in fe_required_terms:
+            with self.subTest(doc="fe", term=term):
+                self.assertIn(term, fe_contract)
+        for term in ai_required_terms:
+            with self.subTest(doc="ai", term=term):
+                self.assertIn(term, ai_contract)
+        for term in workflow_required_terms:
+            with self.subTest(doc="workflow", term=term):
+                self.assertIn(term, workflow)
 
     def test_readme_recommendation_example_uses_display_values(self) -> None:
         readme_text = README_PATH.read_text(encoding="utf-8")

@@ -68,7 +68,16 @@ _INGREDIENT_ALIASES: dict[str, tuple[str, ...]] = {
         "동태살",
     ),
     "garlic": ("마늘", "다진마늘", "다진 마늘", "통마늘"),
-    "green_onion": ("대파", "파"),
+    "green_onion": (
+        "대파",
+        "파",
+        "leek",
+        "scallion",
+        "spring onion",
+        "spring_onion",
+        "green onion",
+        "green_onion",
+    ),
     "lettuce": ("상추", "양상추", "로메인"),
     "milk": ("우유",),
     "mushroom": (
