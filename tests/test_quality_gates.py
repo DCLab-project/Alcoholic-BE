@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import time
 import unittest
 from collections import Counter, defaultdict
@@ -167,11 +168,25 @@ FORBIDDEN_BAD_GRAMMAR_PHRASES = {
 }
 
 BROAD_KEY_UNSAFE_TERMS = {
-    "fish": {"대구", "대구살", "동태", "연어", "도미", "광어"},
+    "fish": {"흰살생선", "흰살", "대구", "대구살", "동태", "연어", "도미", "광어"},
     "pork": {"목살", "삼겹살", "앞다리살", "대패", "돼지안심"},
     "chicken": {"닭다리살", "닭가슴살", "닭안심"},
     "mushroom": {"팽이버섯", "느타리", "양송이", "표고"},
     "cheese": {"체다", "모짜렐라", "파마산", "리코타", "크림치즈"},
+}
+
+FORBIDDEN_OPAQUE_INGREDIENT_COUNT_PATTERN = re.compile(r"외 \d+가지")
+
+FORBIDDEN_PLACEHOLDER_STEP_TITLES = {
+    "나머지 손질",
+    "잠깐 식히기",
+}
+
+METHOD_NAME_RULES = {
+    "호일구이": {"호일"},
+    "에어프라이어": {"에어프라이어"},
+    "팬구이": {"팬"},
+    "꼬치": {"꼬치"},
 }
 
 
@@ -243,6 +258,37 @@ class SeedQualityGateTest(unittest.TestCase):
         )
         found = [term for term in sorted(forbidden) if term in self.seed_text]
         self.assertEqual([], found)
+
+    def test_seed_has_no_opaque_ingredient_count_phrases(self) -> None:
+        found = []
+        for recipe in self.recipes:
+            recipe_text = " ".join(flatten_strings(recipe))
+            if FORBIDDEN_OPAQUE_INGREDIENT_COUNT_PATTERN.search(recipe_text):
+                found.append(recipe["name"])
+        self.assertEqual([], found)
+
+    def test_recipe_steps_do_not_use_placeholder_titles(self) -> None:
+        found = []
+        for recipe in self.recipes:
+            for step in recipe["recipe_steps"]:
+                if step["title"] in FORBIDDEN_PLACEHOLDER_STEP_TITLES:
+                    found.append((recipe["name"], step["title"]))
+        self.assertEqual([], found)
+
+    def test_recipe_names_match_core_cooking_method(self) -> None:
+        for recipe in self.recipes:
+            recipe_text = " ".join(
+                f"{step['title']} {step['instruction']}"
+                for step in recipe["recipe_steps"]
+            )
+            for method_name, required_terms in METHOD_NAME_RULES.items():
+                if method_name not in recipe["name"]:
+                    continue
+                with self.subTest(recipe=recipe["name"], method_name=method_name):
+                    self.assertTrue(
+                        any(term in recipe_text for term in required_terms),
+                        f"{recipe['name']} must mention one of {sorted(required_terms)} in steps",
+                    )
 
     def test_all_recipes_have_service_grade_cooking_steps(self) -> None:
         for recipe in self.recipes:
