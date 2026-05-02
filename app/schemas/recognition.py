@@ -29,6 +29,7 @@ class IngredientLiveRecognitionCreate(BaseModel):
         description="이 인식 결과를 보낸 모델 또는 서비스 이름입니다.",
         examples=["ingredient_classifier"],
     )
+    scan_request_id: str | None = Field(default=None, max_length=100)
 
     model_config = {
         "json_schema_extra": {
@@ -45,6 +46,7 @@ class IngredientLiveRecognitionCreate(BaseModel):
 class IngredientStreamEvent(BaseModel):
     ingredient_name: str = Field(description="실시간으로 감지된 식재료 한글 이름입니다.")
     timestamp: datetime = Field(description="해당 식재료 이벤트가 발생한 시각입니다.")
+    scan_request_id: str | None = Field(default=None)
 
 
 class LiquorLiveRecognitionCreate(BaseModel):
@@ -72,6 +74,7 @@ class LiquorLiveRecognitionCreate(BaseModel):
         description="이 인식 결과를 보낸 모델 또는 서비스 이름입니다.",
         examples=["liquor_classifier"],
     )
+    scan_request_id: str | None = Field(default=None, max_length=100)
 
     model_config = {
         "json_schema_extra": {
@@ -88,6 +91,7 @@ class LiquorLiveRecognitionCreate(BaseModel):
 class LiquorStreamEvent(BaseModel):
     liquor_name: str = Field(description="실시간으로 감지된 주류 한글 이름입니다.")
     timestamp: datetime = Field(description="해당 주류 이벤트가 발생한 시각입니다.")
+    scan_request_id: str | None = Field(default=None)
 
 
 class LiveRecognitionAcceptedResponse(BaseModel):
@@ -125,3 +129,13 @@ class LiquorScanStartResponse(BaseModel):
     )
     message: str = Field(description="주류 스캔 시작 처리 결과 메시지입니다.")
     scan_request_id: str = Field(description="이번 주류 스캔 요청을 식별하는 ID입니다.")
+
+
+class IngredientScanStartRequest(LiquorScanStartRequest):
+    pass
+
+
+class IngredientScanStartResponse(BaseModel):
+    status: Literal["accepted"]
+    message: str
+    scan_request_id: str

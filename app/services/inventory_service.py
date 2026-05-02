@@ -6,10 +6,14 @@ from app.repositories.inventory_repository import InventoryRepository
 from app.schemas.inventory import (
     InventoryBulkCreate,
     InventoryBulkResponse,
+    InventoryCreateRequest,
+    InventoryDeleteResponse,
     InventoryItemData,
     InventoryListResponse,
+    InventoryMutationResponse,
     InventoryQuantityPatchRequest,
     InventoryQuantityPatchResponse,
+    InventoryUpdateRequest,
 )
 from app.services.name_mapping import ingredient_display_name, normalize_ingredient_key
 
@@ -89,6 +93,85 @@ class InventoryService:
             status="success",
             message="보관함에 저장되었습니다.",
             saved_count=len(normalized_items),
+        )
+
+    def _current_quantity(self, ingredient_name: str) -> int:
+        return sum(
+            item.count
+            for item in self.repository.list_inventory_items()
+            if normalize_ingredient_key(item.item_name) == ingredient_name
+        )
+
+    def add_inventory_item(
+        self, payload: InventoryCreateRequest
+    ) -> InventoryMutationResponse:
+        ingredient_name = normalize_ingredient_key(payload.ingredient_name)
+        inventory_item = self.repository.upsert_inventory_count(
+            ingredient_name,
+            payload.quantity,
+        )
+        self.repository.create_event(
+            item_name=ingredient_name,
+            event_type="manual_add",
+            quantity=payload.quantity,
+            confidence=1.0,
+            source="manual_inventory_create",
+            detected_at=inventory_item.updated_at,
+        )
+        self.db.commit()
+        self.db.refresh(inventory_item)
+
+        return InventoryMutationResponse(
+            status="success",
+            message="식재료가 추가되었습니다.",
+            ingredient_name=ingredient_display_name(ingredient_name),
+            current_quantity=self._current_quantity(ingredient_name),
+        )
+
+    def update_inventory_item(
+        self,
+        ingredient_name: str,
+        payload: InventoryUpdateRequest,
+    ) -> InventoryMutationResponse:
+        current_name = normalize_ingredient_key(ingredient_name)
+        new_name = (
+            normalize_ingredient_key(payload.new_ingredient_name)
+            if payload.new_ingredient_name
+            else current_name
+        )
+        current_item = self.repository.get_inventory_item(current_name)
+        current_quantity = current_item.count if current_item else 0
+        new_quantity = payload.quantity if payload.quantity is not None else current_quantity
+
+        if new_name != current_name:
+            self.repository.delete_inventory_item(current_name)
+
+        inventory_item = self.repository.set_inventory_count(new_name, new_quantity)
+        self.repository.create_event(
+            item_name=new_name,
+            event_type="manual_update",
+            quantity=new_quantity,
+            confidence=1.0,
+            source="manual_inventory_update",
+            detected_at=inventory_item.updated_at,
+        )
+        self.db.commit()
+        self.db.refresh(inventory_item)
+
+        return InventoryMutationResponse(
+            status="success",
+            message="식재료가 수정되었습니다.",
+            ingredient_name=ingredient_display_name(new_name),
+            current_quantity=self._current_quantity(new_name),
+        )
+
+    def delete_inventory_item(self, ingredient_name: str) -> InventoryDeleteResponse:
+        normalized = normalize_ingredient_key(ingredient_name)
+        self.repository.delete_inventory_item(normalized)
+        self.db.commit()
+        return InventoryDeleteResponse(
+            status="success",
+            message="식재료가 삭제되었습니다.",
         )
 
     def patch_inventory_quantity(

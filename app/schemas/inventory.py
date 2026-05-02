@@ -41,6 +41,28 @@ class InventoryBulkResponse(BaseModel):
     saved_count: int = Field(description="배열 기준으로 저장 처리된 총 식재료 항목 수입니다.")
 
 
+class InventoryCreateRequest(BaseModel):
+    ingredient_name: str = Field(min_length=1, max_length=100)
+    quantity: int = Field(default=1, ge=0)
+
+
+class InventoryUpdateRequest(BaseModel):
+    new_ingredient_name: str | None = Field(default=None, min_length=1, max_length=100)
+    quantity: int | None = Field(default=None, ge=0)
+
+
+class InventoryMutationResponse(BaseModel):
+    status: Literal["success"]
+    message: str
+    ingredient_name: str
+    current_quantity: int
+
+
+class InventoryDeleteResponse(BaseModel):
+    status: Literal["success"]
+    message: str
+
+
 class InventoryQuantityPatchRequest(BaseModel):
     ingredient_name: str = Field(
         min_length=1,

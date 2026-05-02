@@ -6,9 +6,13 @@ from app.repositories.inventory_repository import InventoryRepository
 from app.schemas.inventory import (
     InventoryBulkCreate,
     InventoryBulkResponse,
+    InventoryCreateRequest,
+    InventoryDeleteResponse,
     InventoryListResponse,
+    InventoryMutationResponse,
     InventoryQuantityPatchRequest,
     InventoryQuantityPatchResponse,
+    InventoryUpdateRequest,
 )
 from app.services.inventory_service import InventoryService
 
@@ -49,6 +53,22 @@ def bulk_save_inventory(
     return service.bulk_save_inventory(payload)
 
 
+@router.post(
+    "",
+    response_model=InventoryMutationResponse,
+    status_code=201,
+    summary="식재료 직접 추가",
+    description="사용자가 식재료 이름과 수량을 직접 입력해 DB에 추가합니다.",
+)
+def add_inventory_item(
+    payload: InventoryCreateRequest,
+    db: Session = Depends(get_db),
+) -> InventoryMutationResponse:
+    repository = InventoryRepository(db)
+    service = InventoryService(db, repository)
+    return service.add_inventory_item(payload)
+
+
 @router.patch(
     "/quantity",
     response_model=InventoryQuantityPatchResponse,
@@ -66,3 +86,34 @@ def patch_inventory_quantity(
     repository = InventoryRepository(db)
     service = InventoryService(db, repository)
     return service.patch_inventory_quantity(payload)
+
+
+@router.patch(
+    "/{ingredient_name}",
+    response_model=InventoryMutationResponse,
+    summary="식재료 이름/수량 직접 수정",
+    description="사용자가 식재료 이름 또는 수량을 직접 수정합니다.",
+)
+def update_inventory_item(
+    ingredient_name: str,
+    payload: InventoryUpdateRequest,
+    db: Session = Depends(get_db),
+) -> InventoryMutationResponse:
+    repository = InventoryRepository(db)
+    service = InventoryService(db, repository)
+    return service.update_inventory_item(ingredient_name, payload)
+
+
+@router.delete(
+    "/{ingredient_name}",
+    response_model=InventoryDeleteResponse,
+    summary="식재료 삭제",
+    description="사용자가 식재료를 DB에서 삭제합니다.",
+)
+def delete_inventory_item(
+    ingredient_name: str,
+    db: Session = Depends(get_db),
+) -> InventoryDeleteResponse:
+    repository = InventoryRepository(db)
+    service = InventoryService(db, repository)
+    return service.delete_inventory_item(ingredient_name)

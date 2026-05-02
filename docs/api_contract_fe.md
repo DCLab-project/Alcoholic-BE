@@ -153,6 +153,31 @@ Example event data:
 
 Event data shape is the same as `GET /api/v1/recommendations`.
 
+## FE Sheet Additions
+
+The following endpoints are additive and keep the existing response fields stable.
+
+### POST `/api/v1/scan/ingredients/start`
+
+Starts a manual ingredient scan and returns `scan_request_id`. The ingredient SSE payload includes the same `scan_request_id` so FE can connect the button request to the streamed result.
+
+### Inventory CRUD
+
+- `POST /api/v1/inventory`: manually add one item with `ingredient_name` and `quantity`.
+- `PATCH /api/v1/inventory/{ingredient_name}`: rename an item and/or set quantity directly.
+- `DELETE /api/v1/inventory/{ingredient_name}`: delete one item.
+
+### Favorite Recipes
+
+- `POST /api/v1/favorite-recipes`: save a recommendation payload.
+- `GET /api/v1/favorite-recipes`: list saved recipes.
+- `GET /api/v1/favorite-recipes/{favorite_id}`: get one saved recipe.
+- `DELETE /api/v1/favorite-recipes/{favorite_id}`: remove one saved recipe.
+
+### POST `/api/v1/recommendations/refresh`
+
+Keeps `keep_recommendations` and fills the remaining slots up to 3 recommendations. Existing recommendation fields such as `name`, `reason`, `ingredient_yes`, `ingredient_no`, `recipe`, and `missing_ingredients` are preserved. Expanded fields such as `ingredient_details`, `recipe_steps`, `priority_rank`, `selection_factors`, `score_breakdown`, and `pantry_items` are also returned when BE selects new recommendations.
+
 ## Manual Liquor Scan
 
 ### POST `/api/v1/scan/liquor/start`

@@ -13,6 +13,8 @@ from app.schemas.recommendation import (
     RecommendationPairingKnowledge,
     RecommendationPantryItem,
     RecommendationRecipeStep,
+    RecommendationRefreshRequest,
+    RecommendationRefreshResponse,
     RecommendationScoreBreakdown,
     RecommendationsResponse,
 )
@@ -327,4 +329,56 @@ class RecommendationService:
         return RecommendationsResponse(
             liquor=liquor_display_name(normalized),
             recommendations=recommendations,
+        )
+
+    def refresh_with_keep(
+        self, payload: RecommendationRefreshRequest
+    ) -> RecommendationRefreshResponse:
+        normalized = normalize_liquor_key(payload.liquor or "soju") or "soju"
+        kept = payload.keep_recommendations[:3]
+        kept_names = {
+            str(item.get("name"))
+            for item in kept
+            if isinstance(item, dict) and item.get("name")
+        }
+        needed_count = min(payload.refresh_count, max(3 - len(kept), 0))
+        fresh_items: list[dict[str, Any]] = []
+
+        for attempt in range(10):
+            if len(fresh_items) >= needed_count:
+                break
+
+            response = self.get_recommendations(normalized, refresh=True)
+            for recommendation in response.recommendations:
+                item = recommendation.model_dump(mode="json")
+                name = str(item.get("name") or "")
+                if not name or name in kept_names:
+                    continue
+                if any(existing.get("name") == name for existing in fresh_items):
+                    continue
+
+                fresh_items.append(item)
+                if len(fresh_items) >= needed_count:
+                    break
+
+            if attempt >= 2 and not fresh_items:
+                break
+
+        combined = kept + fresh_items
+        if len(combined) < 3:
+            response = self.get_recommendations(normalized, refresh=True)
+            for recommendation in response.recommendations:
+                item = recommendation.model_dump(mode="json")
+                name = str(item.get("name") or "")
+                if name in kept_names:
+                    continue
+                if any(existing.get("name") == name for existing in combined):
+                    continue
+                combined.append(item)
+                if len(combined) >= 3:
+                    break
+
+        return RecommendationRefreshResponse(
+            liquor=liquor_display_name(normalized),
+            recommendations=combined[:3],
         )

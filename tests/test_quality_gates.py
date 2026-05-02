@@ -13,10 +13,15 @@ from sqlalchemy.orm import sessionmaker
 
 from app.db import Base
 from app.domain.models import InventoryItem
+from app.repositories.favorite_recipe_repository import FavoriteRecipeRepository
 from app.repositories.inventory_repository import InventoryRepository
 from app.seeds.recommendation_seed import seed_recommendation_data
+from app.schemas.favorite_recipe import FavoriteRecipeCreate
 from app.schemas.inventory import InventoryBulkCreate
-from app.schemas.recommendation import RecommendationsResponse
+from app.schemas.inventory import InventoryCreateRequest, InventoryUpdateRequest
+from app.schemas.recognition import IngredientStreamEvent, LiquorStreamEvent
+from app.schemas.recommendation import RecommendationRefreshRequest, RecommendationsResponse
+from app.services.favorite_recipe_service import FavoriteRecipeService
 from app.services.inventory_service import InventoryService
 from app.services.name_mapping import (
     ingredient_display_name,
@@ -24,7 +29,10 @@ from app.services.name_mapping import (
     normalize_ingredient_key,
     normalize_liquor_key,
 )
-from app.services.recognition_service import MOCK_LIQUOR_SCAN_CANDIDATES
+from app.services.recognition_service import (
+    MOCK_INGREDIENT_SCAN_CANDIDATES,
+    MOCK_LIQUOR_SCAN_CANDIDATES,
+)
 from app.services.recommendation_service import RecommendationService
 
 
@@ -400,6 +408,27 @@ class MappingQualityGateTest(unittest.TestCase):
         )
         self.assertEqual(7, len(MOCK_LIQUOR_SCAN_CANDIDATES))
 
+    def test_manual_ingredient_scan_mock_uses_supported_keys(self) -> None:
+        self.assertGreaterEqual(len(MOCK_INGREDIENT_SCAN_CANDIDATES), 3)
+        self.assertTrue(
+            set(MOCK_INGREDIENT_SCAN_CANDIDATES).issubset(ALLOWED_INGREDIENT_KEYS)
+        )
+
+    def test_stream_events_include_scan_request_id(self) -> None:
+        ingredient_event = IngredientStreamEvent(
+            ingredient_name="대파",
+            timestamp="2026-04-10T17:16:01Z",
+            scan_request_id="ingredient-scan-001",
+        )
+        liquor_event = LiquorStreamEvent(
+            liquor_name="소주",
+            timestamp="2026-04-10T17:20:00Z",
+            scan_request_id="liquor-scan-001",
+        )
+
+        self.assertEqual("ingredient-scan-001", ingredient_event.scan_request_id)
+        self.assertEqual("liquor-scan-001", liquor_event.scan_request_id)
+
 
 class PolicyDocumentationQualityGateTest(unittest.TestCase):
     def test_recommendation_policy_documents_seed_and_scoring_rules(self) -> None:
@@ -593,6 +622,58 @@ class ServiceQualityGateTest(unittest.TestCase):
         self.assertEqual(2, quantities["대파"])
         self.assertEqual(1, quantities["양파"])
 
+    def test_inventory_manual_crud_supports_fe_contract(self) -> None:
+        service = InventoryService(self.db, InventoryRepository(self.db))
+
+        created = service.add_inventory_item(
+            InventoryCreateRequest(ingredient_name="마늘", quantity=3)
+        )
+        updated = service.update_inventory_item(
+            "마늘",
+            InventoryUpdateRequest(new_ingredient_name="대파", quantity=5),
+        )
+        service.delete_inventory_item("대파")
+        quantities = {
+            item.ingredient_name: item.quantity
+            for item in service.list_inventory().data
+        }
+
+        self.assertEqual("success", created.status)
+        self.assertEqual("마늘", created.ingredient_name)
+        self.assertEqual(3, created.current_quantity)
+        self.assertEqual("success", updated.status)
+        self.assertEqual("대파", updated.ingredient_name)
+        self.assertEqual(5, updated.current_quantity)
+        self.assertNotIn("대파", quantities)
+
+    def test_favorite_recipe_crud_preserves_recommendation_payload(self) -> None:
+        service = FavoriteRecipeService(
+            self.db,
+            FavoriteRecipeRepository(self.db),
+        )
+        payload = FavoriteRecipeCreate(
+            liquor="소주",
+            name="대파 삼겹살 볶음",
+            reason="소주와 잘 어울립니다.",
+            ingredient_yes=["대파"],
+            ingredient_no=["돼지고기"],
+            recipe=["1. 대파를 썹니다."],
+            missing_ingredients=["돼지고기"],
+            priority_rank=1,
+        )
+
+        created = service.create_favorite(payload)
+        listed = service.list_favorites()
+        detail = service.get_favorite(created.favorite_id)
+        deleted = service.delete_favorite(created.favorite_id)
+
+        self.assertEqual("success", created.status)
+        self.assertEqual(1, len(listed.data))
+        self.assertEqual(created.favorite_id, detail.data["favorite_id"])
+        self.assertEqual(1, detail.data["priority_rank"])
+        self.assertEqual(["돼지고기"], detail.data["missing_ingredients"])
+        self.assertEqual("success", deleted.status)
+
     def test_recommendation_accepts_korean_liquor_and_returns_display_safe_text(self) -> None:
         response = RecommendationService(self.db).get_recommendations("레드와인", False)
 
@@ -656,6 +737,25 @@ class ServiceQualityGateTest(unittest.TestCase):
 
         self.assertEqual(12, len(seen_names))
         self.assertGreaterEqual(len(set(seen_names)), 9)
+
+    def test_partial_refresh_keeps_selected_recommendation(self) -> None:
+        service = RecommendationService(self.db)
+        original = service.get_recommendations("소주", False)
+        kept = original.recommendations[0].model_dump(mode="json")
+
+        response = service.refresh_with_keep(
+            RecommendationRefreshRequest(
+                liquor="소주",
+                keep_recommendations=[kept],
+                refresh_count=2,
+            )
+        )
+        names = [item["name"] for item in response.recommendations]
+
+        self.assertEqual("소주", response.liquor)
+        self.assertEqual(3, len(response.recommendations))
+        self.assertEqual(kept["name"], response.recommendations[0]["name"])
+        self.assertEqual(len(names), len(set(names)))
 
     def test_all_liquor_recommendation_responses_are_display_safe(self) -> None:
         service = RecommendationService(self.db)

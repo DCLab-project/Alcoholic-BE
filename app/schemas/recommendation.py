@@ -1,3 +1,5 @@
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 
@@ -206,3 +208,14 @@ class RecommendationsResponse(BaseModel):
             "example": RECOMMENDATIONS_RESPONSE_EXAMPLE,
         }
     }
+
+
+class RecommendationRefreshRequest(BaseModel):
+    liquor: str = Field(min_length=1, max_length=100)
+    keep_recommendations: list[dict[str, Any]] = Field(default_factory=list)
+    refresh_count: int = Field(default=1, ge=0, le=3)
+
+
+class RecommendationRefreshResponse(BaseModel):
+    liquor: str
+    recommendations: list[dict[str, Any]]

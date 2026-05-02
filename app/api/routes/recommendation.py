@@ -2,7 +2,11 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.dependencies import get_db
-from app.schemas.recommendation import RecommendationsResponse
+from app.schemas.recommendation import (
+    RecommendationRefreshRequest,
+    RecommendationRefreshResponse,
+    RecommendationsResponse,
+)
 from app.services.recommendation_service import RecommendationService
 
 router = APIRouter(prefix="/api/v1/recommendations", tags=["추천"])
@@ -29,3 +33,17 @@ def get_recommendations(
 ) -> RecommendationsResponse:
     service = RecommendationService(db)
     return service.get_recommendations(liquor=liquor, refresh=refresh)
+
+
+@router.post(
+    "/refresh",
+    response_model=RecommendationRefreshResponse,
+    summary="고정 추천 제외 재추천",
+    description="고정된 추천은 유지하고 나머지만 새 추천으로 채워 총 3개를 반환합니다.",
+)
+def refresh_recommendations(
+    payload: RecommendationRefreshRequest,
+    db: Session = Depends(get_db),
+) -> RecommendationRefreshResponse:
+    service = RecommendationService(db)
+    return service.refresh_with_keep(payload)

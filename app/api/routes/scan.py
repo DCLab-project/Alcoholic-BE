@@ -1,6 +1,11 @@
 from fastapi import APIRouter
 
-from app.schemas.recognition import LiquorScanStartRequest, LiquorScanStartResponse
+from app.schemas.recognition import (
+    IngredientScanStartRequest,
+    IngredientScanStartResponse,
+    LiquorScanStartRequest,
+    LiquorScanStartResponse,
+)
 from app.services.recognition_service import RecognitionService
 
 router = APIRouter(prefix="/api/v1/scan", tags=["스캔 요청"])
@@ -21,3 +26,17 @@ async def start_liquor_scan(
 ) -> LiquorScanStartResponse:
     service = RecognitionService()
     return await service.start_liquor_scan(payload)
+
+
+@router.post(
+    "/ingredients/start",
+    response_model=IngredientScanStartResponse,
+    summary="식재료 스캔 요청",
+    description="홈 화면에서 식재료 스캔 버튼을 누르면 식재료 인식 mock 흐름을 시작합니다.",
+    response_description="식재료 스캔 요청 접수 결과와 scan_request_id를 반환합니다.",
+)
+async def start_ingredient_scan(
+    payload: IngredientScanStartRequest,
+) -> IngredientScanStartResponse:
+    service = RecognitionService()
+    return await service.start_ingredient_scan(payload)
