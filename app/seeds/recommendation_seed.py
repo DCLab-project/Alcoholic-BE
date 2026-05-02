@@ -12,7 +12,6 @@ from app.domain.models import Recipe, RecipeIngredient
 SEED_FILE = Path(__file__).resolve().parents[2] / "seeds" / "recommendations.json"
 
 FALLBACK_DISPLAY_NAMES = {
-    "bacon": "베이컨",
     "beef": "소고기",
     "bread": "빵",
     "broccoli": "브로콜리",
@@ -24,9 +23,9 @@ FALLBACK_DISPLAY_NAMES = {
     "cucumber": "오이",
     "egg": "달걀",
     "eggplant": "가지",
-    "fish": "생선",
+    "fish": "생선살",
     "garlic": "마늘",
-    "green_onion": "대파",
+    "leek": "대파",
     "lettuce": "상추",
     "milk": "우유",
     "mushroom": "버섯",
@@ -35,10 +34,14 @@ FALLBACK_DISPLAY_NAMES = {
     "pork": "돼지고기",
     "potato": "감자",
     "sausage": "소시지",
-    "spinach": "시금치",
     "tomato": "토마토",
-    "yogurt": "요거트",
     "zucchini": "애호박",
+    "lemon": "레몬",
+    "avocado": "아보카도",
+    "radish": "무",
+    "tofu": "두부",
+    "ginger": "생강",
+    "salmon": "연어",
 }
 
 

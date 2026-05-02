@@ -37,7 +37,6 @@ OPERATIONS_READINESS_PATH = ROOT_DIR / "docs" / "operations_readiness.md"
 DB_INIT_SCRIPT_PATH = ROOT_DIR / "scripts" / "initialize_database.py"
 
 ALLOWED_INGREDIENT_KEYS = {
-    "bacon",
     "beef",
     "bread",
     "broccoli",
@@ -51,7 +50,7 @@ ALLOWED_INGREDIENT_KEYS = {
     "eggplant",
     "fish",
     "garlic",
-    "green_onion",
+    "leek",
     "lettuce",
     "milk",
     "mushroom",
@@ -60,10 +59,14 @@ ALLOWED_INGREDIENT_KEYS = {
     "pork",
     "potato",
     "sausage",
-    "spinach",
     "tomato",
-    "yogurt",
     "zucchini",
+    "lemon",
+    "avocado",
+    "radish",
+    "tofu",
+    "ginger",
+    "salmon",
 }
 
 EXPECTED_LIQUOR_COUNTS = {
@@ -84,6 +87,49 @@ LIQUOR_DISPLAY_NAMES = {
     "sparkling_wine": "스파클링와인",
     "whisky": "위스키",
     "sake": "사케",
+}
+
+INGREDIENT_TAG_LABELS = {
+    "beef": {"소고기", "쇠고기"},
+    "bread": {"빵"},
+    "broccoli": {"브로콜리"},
+    "butter": {"버터"},
+    "cabbage": {"양배추"},
+    "carrot": {"당근"},
+    "cheese": {"치즈"},
+    "chicken": {"닭고기"},
+    "cucumber": {"오이"},
+    "egg": {"달걀", "계란"},
+    "eggplant": {"가지"},
+    "fish": {"생선", "생선살"},
+    "garlic": {"마늘"},
+    "leek": {"대파"},
+    "lettuce": {"상추"},
+    "milk": {"우유"},
+    "mushroom": {"버섯"},
+    "onion": {"양파"},
+    "pepper": {"파프리카"},
+    "pork": {"돼지고기", "삼겹살", "목살"},
+    "potato": {"감자"},
+    "sausage": {"소시지", "소세지"},
+    "tomato": {"토마토"},
+    "zucchini": {"애호박"},
+    "lemon": {"레몬"},
+    "avocado": {"아보카도"},
+    "radish": {"무"},
+    "tofu": {"두부"},
+    "ginger": {"생강"},
+    "salmon": {"연어"},
+}
+
+RETIRED_INGREDIENT_TERMS = {
+    "bacon",
+    "green_onion",
+    "spinach",
+    "yogurt",
+    "베이컨",
+    "시금치",
+    "요거트",
 }
 
 HEAT_LEVELS = {"없음", "약불", "중불", "중강불", "센 불"}
@@ -221,8 +267,10 @@ METHOD_TERMS = {
     "소금구이": {"팬구이", "구이"},
     "수프": {"수프"},
     "스튜": {"스튜"},
+    "전": {"전"},
     "오픈샌드": {"오픈샌드"},
     "오픈토스트": {"오픈샌드"},
+    "탕": {"탕"},
     "전골": {"전골"},
     "찜": {"찜", "달걀찜"},
     "조림": {"조림"},
@@ -290,6 +338,12 @@ def flatten_strings(value) -> list[str]:
             flattened.extend(flatten_strings(item))
         return flattened
     return []
+
+
+def recipe_text_contains_label(text: str, label: str) -> bool:
+    if label == "무":
+        return re.search(r"(^|\s)무($|\s)", text) is not None
+    return label in text
 
 
 def assert_display_safe(test_case: unittest.TestCase, visible_payload) -> None:
@@ -495,6 +549,38 @@ class SeedQualityGateTest(unittest.TestCase):
             with self.subTest(recipe=recipe["name"], term="method_term"):
                 self.assertTrue(matched_method)
 
+    def test_recipe_names_do_not_claim_undeclared_core_ingredients(self) -> None:
+        for recipe in self.recipes:
+            declared_keys = {
+                detail["item_name"] for detail in recipe["ingredient_details"]
+            }
+            for ingredient_key, labels in INGREDIENT_TAG_LABELS.items():
+                for label in labels:
+                    if not recipe_text_contains_label(recipe["name"], label):
+                        continue
+                    with self.subTest(recipe=recipe["name"], label=label):
+                        self.assertIn(ingredient_key, declared_keys)
+
+    def test_recipe_tags_do_not_claim_undeclared_core_ingredients(self) -> None:
+        for recipe in self.recipes:
+            declared_keys = {
+                detail["item_name"] for detail in recipe["ingredient_details"]
+            }
+            tags = set(recipe["tags"])
+            for ingredient_key, labels in INGREDIENT_TAG_LABELS.items():
+                claimed_labels = tags & labels
+                if not claimed_labels:
+                    continue
+                with self.subTest(recipe=recipe["name"], labels=claimed_labels):
+                    self.assertIn(ingredient_key, declared_keys)
+
+    def test_recipe_visible_text_uses_current_ai_ingredient_classes(self) -> None:
+        for recipe in self.recipes:
+            visible_text = " ".join(flatten_strings(recipe))
+            for retired_term in RETIRED_INGREDIENT_TERMS:
+                with self.subTest(recipe=recipe["name"], retired_term=retired_term):
+                    self.assertNotIn(retired_term, visible_text)
+
     def test_recipe_schema_and_content_constraints(self) -> None:
         for recipe in self.recipes:
             with self.subTest(recipe=recipe["name"]):
@@ -528,11 +614,19 @@ class SeedQualityGateTest(unittest.TestCase):
 
 class MappingQualityGateTest(unittest.TestCase):
     def test_ingredient_mapping_accepts_korean_and_internal_keys(self) -> None:
-        self.assertEqual("green_onion", normalize_ingredient_key("대파"))
-        self.assertEqual("green_onion", normalize_ingredient_key("green_onion"))
+        self.assertEqual("leek", normalize_ingredient_key("대파"))
+        self.assertEqual("leek", normalize_ingredient_key("leek"))
+        self.assertEqual("leek", normalize_ingredient_key("green_onion"))
         self.assertEqual("pepper", normalize_ingredient_key("파프리카"))
+        self.assertEqual("대파", ingredient_display_name("leek"))
         self.assertEqual("대파", ingredient_display_name("green_onion"))
         self.assertEqual("파프리카", ingredient_display_name("pepper"))
+        self.assertEqual("레몬", ingredient_display_name("lemon"))
+        self.assertEqual("아보카도", ingredient_display_name("avocado"))
+        self.assertEqual("무", ingredient_display_name("radish"))
+        self.assertEqual("두부", ingredient_display_name("tofu"))
+        self.assertEqual("생강", ingredient_display_name("ginger"))
+        self.assertEqual("연어", ingredient_display_name("salmon"))
 
     def test_liquor_mapping_accepts_korean_and_internal_keys(self) -> None:
         self.assertEqual("red_wine", normalize_liquor_key("레드와인"))
@@ -692,7 +786,7 @@ class ServiceQualityGateTest(unittest.TestCase):
     def test_inventory_bulk_save_accepts_korean_and_internal_keys(self) -> None:
         service = InventoryService(self.db, InventoryRepository(self.db))
         response = service.bulk_save_inventory(
-            InventoryBulkCreate(items=["대파", "green_onion", "양파"])
+            InventoryBulkCreate(items=["대파", "leek", "green_onion", "양파"])
         )
         quantities = {
             item.ingredient_name: item.quantity
@@ -701,8 +795,8 @@ class ServiceQualityGateTest(unittest.TestCase):
 
         self.assertEqual("success", response.status)
         self.assertEqual("보관함에 저장되었습니다.", response.message)
-        self.assertEqual(3, response.saved_count)
-        self.assertEqual(2, quantities["대파"])
+        self.assertEqual(4, response.saved_count)
+        self.assertEqual(3, quantities["대파"])
         self.assertEqual(1, quantities["양파"])
 
     def test_recommendation_accepts_korean_liquor_and_returns_display_safe_text(self) -> None:
@@ -730,7 +824,7 @@ class ServiceQualityGateTest(unittest.TestCase):
     def test_recommendation_exposes_simple_ingredient_availability_lists(self) -> None:
         self.db.add_all(
             [
-                InventoryItem(item_name="green_onion", count=1),
+                InventoryItem(item_name="leek", count=1),
                 InventoryItem(item_name="garlic", count=1),
             ]
         )

@@ -229,3 +229,41 @@ total_score = 2 * 3 - 2 * 2 + 94 = 96
 
 ## 11. 한 줄 설명
 이 추천 시스템은 검수된 레시피 DB에서 감지된 주류와 현재 냉장고 재고에 가장 잘 맞는 안주를 점수화해 고르는 방식입니다.
+
+
+## AI 확정 식재료 클래스
+
+Recommendation seed의 `ingredient_details.item_name`은 AI 인식 클래스 30개만 사용합니다.
+
+- `beef`
+- `bread`
+- `broccoli`
+- `butter`
+- `cabbage`
+- `carrot`
+- `cheese`
+- `chicken`
+- `cucumber`
+- `egg`
+- `eggplant`
+- `fish`
+- `garlic`
+- `leek`
+- `lettuce`
+- `milk`
+- `mushroom`
+- `onion`
+- `pepper`
+- `pork`
+- `potato`
+- `sausage`
+- `tomato`
+- `zucchini`
+- `lemon`
+- `avocado`
+- `radish`
+- `tofu`
+- `ginger`
+- `salmon`
+
+`green_onion`은 legacy 입력 호환만 허용하고 seed core key는 `leek`로 통일합니다. `bacon`, `spinach`, `yogurt`는 AI 확정 클래스가 아니므로 seed core ingredient로 사용하지 않습니다.
