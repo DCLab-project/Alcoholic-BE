@@ -481,6 +481,11 @@ class SwaggerDocumentationQualityGateTest(unittest.TestCase):
         self.assertEqual(["돼지고기"], first["missing_ingredients"])
         self.assertEqual(["대파", "상추"], first["ingredient_yes"])
         self.assertEqual(["돼지고기"], first["ingredient_no"])
+        self.assertEqual(["돼지고기"], first["shopping_items"])
+        self.assertEqual(
+            "돼지고기",
+            first["substitution_tips"][0]["missing_ingredient"],
+        )
         self.assertIn("recipe_steps", first)
         self.assertIn("pairing_knowledge", first)
         self.assertIn("score_breakdown", first)
@@ -500,12 +505,20 @@ class SwaggerDocumentationQualityGateTest(unittest.TestCase):
 
         fe_required_terms = [
             "`/api/v1/recommendations`",
-            "`/api/v1/stream/recommendations`",
+            "`/api/v1/recommendations/refresh`",
+            "`/api/v1/favorite-recipes`",
             "ingredient_yes",
             "ingredient_no",
             "missing_ingredients",
             "ingredient_details[].status",
-            "pepper`는 고추가 아니라 파프리카",
+            "`available_only`",
+            "`max_missing_count`",
+            "`max_cook_time_minutes`",
+            "`difficulty`",
+            "`shopping_items`",
+            "`substitution_tips`",
+            "`leek` | 대파",
+            "`pepper`는 고추가 아니라 파프리카",
         ]
         ai_required_terms = [
             "POST `/api/v1/recognitions/ingredients`",
@@ -731,6 +744,34 @@ class ServiceQualityGateTest(unittest.TestCase):
             self.assertEqual(expected_yes, recommendation.ingredient_yes)
             self.assertEqual(expected_no, recommendation.ingredient_no)
             self.assertEqual(expected_no, recommendation.missing_ingredients)
+            self.assertEqual(expected_no, recommendation.shopping_items)
+            self.assertEqual(
+                expected_no,
+                [tip.missing_ingredient for tip in recommendation.substitution_tips],
+            )
+
+    def test_recommendation_filters_support_fe_ux_controls(self) -> None:
+        service = RecommendationService(self.db)
+
+        available_only = service.get_recommendations("소주", False, available_only=True)
+        quick_easy = service.get_recommendations(
+            "소주",
+            False,
+            max_missing_count=3,
+            max_cook_time_minutes=20,
+            difficulty="easy",
+        )
+
+        self.assertTrue(
+            all(len(item.ingredient_no) == 0 for item in available_only.recommendations)
+        )
+        self.assertTrue(
+            all(len(item.ingredient_no) <= 3 for item in quick_easy.recommendations)
+        )
+        self.assertTrue(
+            all(item.cook_time_minutes <= 20 for item in quick_easy.recommendations)
+        )
+        self.assertTrue(all(item.difficulty == "easy" for item in quick_easy.recommendations))
 
     def test_refresh_rotates_beyond_two_recommendation_sets(self) -> None:
         service = RecommendationService(self.db)

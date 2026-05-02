@@ -42,7 +42,7 @@ RECOMMENDATIONS_RESPONSE_EXAMPLE = {
                     "status": "missing",
                 },
                 {
-                    "item_name": "green_onion",
+                    "item_name": "leek",
                     "display_name": "대파",
                     "variant_detail": "굵은 대파",
                     "amount": 1,
@@ -67,6 +67,14 @@ RECOMMENDATIONS_RESPONSE_EXAMPLE = {
                 {"name": "식용유", "amount": 1, "unit": "큰술"},
                 {"name": "소금", "amount": 0.3, "unit": "작은술"},
                 {"name": "후추", "amount": 0.2, "unit": "작은술"},
+            ],
+            "shopping_items": ["돼지고기"],
+            "substitution_tips": [
+                {
+                    "missing_ingredient": "돼지고기",
+                    "suggestion": "소고기 또는 닭고기",
+                    "note": "고기 종류가 바뀌면 같은 크기로 썰고 중심까지 익혀주세요.",
+                }
             ],
             "recipe": [
                 "1. 재료 손질: 돼지고기, 대파, 상추를 먹기 좋은 크기로 준비하고, 물기가 있는 재료는 키친타월로 가볍게 눌러주세요.",
@@ -140,6 +148,12 @@ class RecommendationPantryItem(BaseModel):
     unit: str = Field(description="수량 단위")
 
 
+class RecommendationSubstitutionTip(BaseModel):
+    missing_ingredient: str = Field(description="부족한 핵심 재료 이름")
+    suggestion: str = Field(description="대체 후보 또는 구매 권장 안내")
+    note: str = Field(description="대체할 때 FE에 보여줄 짧은 주의 문구")
+
+
 class RecommendationRecipeStep(BaseModel):
     step_number: int = Field(description="조리 단계 번호")
     title: str = Field(description="단계 제목")
@@ -191,6 +205,14 @@ class RecommendationItem(BaseModel):
     pantry_items: list[str] = Field(description="상온에 기본 보유한다고 가정하는 양념/재료")
     pantry_item_details: list[RecommendationPantryItem] = Field(
         description="정량화된 기본 양념 목록"
+    )
+    shopping_items: list[str] = Field(
+        default_factory=list,
+        description="장보기 UI에 바로 표시할 부족 핵심 재료 목록",
+    )
+    substitution_tips: list[RecommendationSubstitutionTip] = Field(
+        default_factory=list,
+        description="부족 핵심 재료별 대체 또는 구매 안내",
     )
     recipe: list[str] = Field(description="단계별 조리 순서")
     recipe_steps: list[RecommendationRecipeStep] = Field(description="구조화된 단계별 조리 순서")
