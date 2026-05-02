@@ -41,7 +41,8 @@ class FavoriteRecipeService:
 
         payload.update(
             {
-                "favorite_id": favorite.id,
+                "favorite_id": str(favorite.id),
+                "id": str(favorite.id),
                 "liquor": favorite.liquor,
                 "name": favorite.name,
                 "reason": favorite.reason,

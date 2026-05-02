@@ -676,7 +676,8 @@ class ServiceQualityGateTest(unittest.TestCase):
 
         self.assertEqual("success", created.status)
         self.assertEqual(1, len(listed.data))
-        self.assertEqual(created.favorite_id, detail.data["favorite_id"])
+        self.assertEqual(str(created.favorite_id), detail.data["favorite_id"])
+        self.assertEqual(str(created.favorite_id), detail.data["id"])
         self.assertEqual(1, detail.data["priority_rank"])
         self.assertEqual(["돼지고기"], detail.data["missing_ingredients"])
         self.assertEqual("success", deleted.status)
