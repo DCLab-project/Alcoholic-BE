@@ -134,9 +134,10 @@ class InventoryService:
         payload: InventoryUpdateRequest,
     ) -> InventoryMutationResponse:
         current_name = normalize_ingredient_key(ingredient_name)
+        requested_name = payload.new_ingredient_name or payload.ingredient_name
         new_name = (
-            normalize_ingredient_key(payload.new_ingredient_name)
-            if payload.new_ingredient_name
+            normalize_ingredient_key(requested_name)
+            if requested_name
             else current_name
         )
         current_item = self.repository.get_inventory_item(current_name)

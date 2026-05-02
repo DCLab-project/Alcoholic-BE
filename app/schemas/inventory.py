@@ -47,6 +47,7 @@ class InventoryCreateRequest(BaseModel):
 
 
 class InventoryUpdateRequest(BaseModel):
+    ingredient_name: str | None = Field(default=None, min_length=1, max_length=100)
     new_ingredient_name: str | None = Field(default=None, min_length=1, max_length=100)
     quantity: int | None = Field(default=None, ge=0)
 

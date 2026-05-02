@@ -632,6 +632,10 @@ class ServiceQualityGateTest(unittest.TestCase):
             "마늘",
             InventoryUpdateRequest(new_ingredient_name="대파", quantity=5),
         )
+        renamed = service.update_inventory_item(
+            "대파",
+            InventoryUpdateRequest(ingredient_name="양파", quantity=2),
+        )
         service.delete_inventory_item("대파")
         quantities = {
             item.ingredient_name: item.quantity
@@ -644,6 +648,9 @@ class ServiceQualityGateTest(unittest.TestCase):
         self.assertEqual("success", updated.status)
         self.assertEqual("대파", updated.ingredient_name)
         self.assertEqual(5, updated.current_quantity)
+        self.assertEqual("양파", renamed.ingredient_name)
+        self.assertEqual(2, renamed.current_quantity)
+        self.assertIn("양파", quantities)
         self.assertNotIn("대파", quantities)
 
     def test_favorite_recipe_crud_preserves_recommendation_payload(self) -> None:
