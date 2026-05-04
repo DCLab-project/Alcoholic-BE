@@ -29,10 +29,6 @@ from app.services.name_mapping import (
     normalize_ingredient_key,
     normalize_liquor_key,
 )
-from app.services.recognition_service import (
-    MOCK_INGREDIENT_SCAN_CANDIDATES,
-    MOCK_LIQUOR_SCAN_CANDIDATES,
-)
 from app.services.recommendation_service import RecommendationService
 
 
@@ -41,6 +37,8 @@ SEED_PATH = ROOT_DIR / "seeds" / "recommendations.json"
 POLICY_PATH = ROOT_DIR / "docs" / "recommendation_policy.md"
 README_PATH = ROOT_DIR / "README.md"
 EVENT_ROUTE_PATH = ROOT_DIR / "app" / "api" / "routes" / "events.py"
+SCAN_ROUTE_PATH = ROOT_DIR / "app" / "api" / "routes" / "scan.py"
+RECOGNITION_SERVICE_PATH = ROOT_DIR / "app" / "services" / "recognition_service.py"
 OPERATIONS_READINESS_PATH = ROOT_DIR / "docs" / "operations_readiness.md"
 DB_INIT_SCRIPT_PATH = ROOT_DIR / "scripts" / "initialize_database.py"
 FE_API_CONTRACT_PATH = ROOT_DIR / "docs" / "api_contract_fe.md"
@@ -401,19 +399,6 @@ class MappingQualityGateTest(unittest.TestCase):
         self.assertEqual("sparkling_wine", normalize_liquor_key("스파클링와인"))
         self.assertEqual("스파클링와인", liquor_display_name("sparkling_wine"))
 
-    def test_manual_scan_mock_covers_all_seed_liquors(self) -> None:
-        self.assertEqual(
-            set(EXPECTED_LIQUOR_COUNTS),
-            set(MOCK_LIQUOR_SCAN_CANDIDATES),
-        )
-        self.assertEqual(7, len(MOCK_LIQUOR_SCAN_CANDIDATES))
-
-    def test_manual_ingredient_scan_mock_uses_supported_keys(self) -> None:
-        self.assertGreaterEqual(len(MOCK_INGREDIENT_SCAN_CANDIDATES), 3)
-        self.assertTrue(
-            set(MOCK_INGREDIENT_SCAN_CANDIDATES).issubset(ALLOWED_INGREDIENT_KEYS)
-        )
-
     def test_stream_events_include_scan_request_id(self) -> None:
         ingredient_event = IngredientStreamEvent(
             ingredient_name="대파",
@@ -428,6 +413,21 @@ class MappingQualityGateTest(unittest.TestCase):
 
         self.assertEqual("ingredient-scan-001", ingredient_event.scan_request_id)
         self.assertEqual("liquor-scan-001", liquor_event.scan_request_id)
+
+    def test_scan_start_contract_has_no_mock_auto_publish_flow(self) -> None:
+        recognition_service_text = RECOGNITION_SERVICE_PATH.read_text(encoding="utf-8")
+        scan_route_text = SCAN_ROUTE_PATH.read_text(encoding="utf-8")
+
+        for forbidden in [
+            "MOCK_",
+            "_mock_",
+            "manual_scan_mock",
+            "choice(",
+        ]:
+            with self.subTest(forbidden=forbidden):
+                self.assertNotIn(forbidden, recognition_service_text)
+
+        self.assertNotIn("mock", scan_route_text.lower())
 
 
 class PolicyDocumentationQualityGateTest(unittest.TestCase):
