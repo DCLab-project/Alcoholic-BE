@@ -348,7 +348,7 @@ class GeminiRecommendationService:
         ]
         inventory_text = "\n".join(inventory_lines) if inventory_lines else "- 없음"
         allowed_key_text = ", ".join(sorted(ALLOWED_INGREDIENT_KEYS))
-        blocked_name_text = ", ".join(existing_names[:120])
+        blocked_name_text = ", ".join(existing_names[:12])
         selected_name_text = ", ".join(selected_names)
         filter_text = [
             f"available_only={available_only}",

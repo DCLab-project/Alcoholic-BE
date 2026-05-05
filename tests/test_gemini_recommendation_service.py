@@ -148,6 +148,26 @@ def test_build_prompt_includes_strict_filter_requirements() -> None:
     assert "pantry_items[].name and pantry_items[].unit must be Korean" in prompt
 
 
+def test_build_prompt_limits_existing_name_examples() -> None:
+    service = GeminiRecommendationService(Settings(gemini_api_key=""))
+    existing_names = [f"기존 레시피 {index}" for index in range(20)]
+
+    prompt = service._build_prompt(
+        liquor_key="soju",
+        inventory_counts={"leek": 2},
+        needed_count=1,
+        existing_names=existing_names,
+        selected_names=[],
+        available_only=False,
+        max_missing_count=None,
+        max_cook_time_minutes=None,
+        difficulty=None,
+    )
+
+    assert "기존 레시피 11" in prompt
+    assert "기존 레시피 12" not in prompt
+
+
 def test_generate_fallback_retries_after_failed_payload(monkeypatch) -> None:
     service = GeminiRecommendationService(Settings(gemini_api_key="test-key"))
     payloads = [None, {"recommendations": [_candidate().model_dump(mode="json")]}]
