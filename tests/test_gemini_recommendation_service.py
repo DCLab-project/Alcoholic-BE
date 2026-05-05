@@ -76,6 +76,7 @@ def test_candidate_to_recommendation_recomputes_inventory_status() -> None:
     )
 
     assert item is not None
+    assert item.recommendation_source == "llm_fallback"
     assert item.priority_rank == 2
     assert item.ingredient_yes == ["대파"]
     assert item.ingredient_no == ["두부"]

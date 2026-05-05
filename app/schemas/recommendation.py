@@ -179,6 +179,10 @@ class RecommendationScoreBreakdown(BaseModel):
 class RecommendationItem(BaseModel):
     name: str = Field(description="추천 안주 이름")
     reason: str = Field(description="해당 안주를 추천하는 이유")
+    recommendation_source: str = Field(
+        default="seed",
+        description="추천 출처입니다. seed 또는 llm_fallback 값을 사용합니다.",
+    )
     priority_rank: int = Field(description="현재 추천 결과 내 우선순위")
     priority_reason: str = Field(description="이 안주가 현재 순위로 선택된 이유")
     selection_factors: list[str] = Field(description="우선순위 산정에 반영된 핵심 요인")

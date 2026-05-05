@@ -522,6 +522,7 @@ class RecommendationService:
                 RecommendationItem(
                     name=recipe.name,
                     reason=recipe.reason,
+                    recommendation_source="seed",
                     priority_rank=index,
                     priority_reason=self._build_priority_reason(
                         rank=index,

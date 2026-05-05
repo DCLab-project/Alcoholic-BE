@@ -478,6 +478,7 @@ Quality rules:
         return RecommendationItem(
             name=candidate.name,
             reason=candidate.reason,
+            recommendation_source="llm_fallback",
             priority_rank=rank,
             priority_reason=(
                 "기존 seed 후보가 부족해 현재 냉장고 재료와 주류 페어링 조건에 맞춰 "

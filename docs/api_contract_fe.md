@@ -296,6 +296,7 @@ Response:
     {
       "name": "돼지고기 대파 소금구이",
       "reason": "돼지고기와 대파의 구운 향이 소주와 잘 어울립니다.",
+      "recommendation_source": "seed",
       "priority_rank": 1,
       "priority_reason": "현재 재고에서 2개 재료를 활용할 수 있고 부족 재료는 1개지만 페어링 기본 점수도 높아서 1순위로 골랐어요.",
       "selection_factors": [
@@ -361,6 +362,7 @@ Response:
 
 FE 표시 가이드:
 
+- `recommendation_source`: `seed`이면 검수된 seed DB 추천, `llm_fallback`이면 seed 부족분을 실시간 보완한 추천입니다. FE는 `llm_fallback`일 때 카드에 `실시간 보완` 같은 작은 배지를 표시할 수 있습니다.
 - `ingredient_yes`: 재료 체크리스트에서 "냉장고에 있음"
 - `ingredient_no`: 재료 체크리스트에서 "부족함"
 - `missing_ingredients`: 기존 호환용 부족 재료 목록. `ingredient_no`와 같은 표시명 기준입니다.
