@@ -109,51 +109,57 @@ class GeminiRecommendationService:
         if not self.api_key or needed_count <= 0:
             return []
 
-        prompt = self._build_prompt(
-            liquor_key=liquor_key,
-            inventory_counts=inventory_counts,
-            needed_count=needed_count,
-            existing_names=existing_names,
-            selected_names=selected_names,
-            available_only=available_only,
-            max_missing_count=max_missing_count,
-            max_cook_time_minutes=max_cook_time_minutes,
-            difficulty=difficulty,
-        )
-        raw_payload = self._call_gemini(prompt)
-        if not raw_payload:
-            return []
-
-        try:
-            parsed = GeminiRecommendationBatch.model_validate(raw_payload)
-        except ValidationError:
-            return []
-
         recommendations: list[RecommendationItem] = []
         blocked_names = {
             self._name_signature(name)
             for name in [*existing_names, *selected_names]
             if name
         }
-        for candidate in parsed.recommendations:
-            if len(recommendations) >= needed_count:
-                break
-            if self._name_signature(candidate.name) in blocked_names:
-                continue
-            item = self._candidate_to_recommendation(
-                candidate,
+
+        for attempt in range(2):
+            prompt = self._build_prompt(
                 liquor_key=liquor_key,
                 inventory_counts=inventory_counts,
-                rank=start_rank + len(recommendations),
+                needed_count=needed_count - len(recommendations),
+                existing_names=existing_names,
+                selected_names=[*selected_names, *[item.name for item in recommendations]],
                 available_only=available_only,
                 max_missing_count=max_missing_count,
                 max_cook_time_minutes=max_cook_time_minutes,
                 difficulty=difficulty,
+                retry=attempt > 0,
             )
-            if item is None:
+            raw_payload = self._call_gemini(prompt)
+            if not raw_payload:
                 continue
-            blocked_names.add(self._name_signature(item.name))
-            recommendations.append(item)
+
+            try:
+                parsed = GeminiRecommendationBatch.model_validate(raw_payload)
+            except ValidationError:
+                continue
+
+            for candidate in parsed.recommendations:
+                if len(recommendations) >= needed_count:
+                    break
+                if self._name_signature(candidate.name) in blocked_names:
+                    continue
+                item = self._candidate_to_recommendation(
+                    candidate,
+                    liquor_key=liquor_key,
+                    inventory_counts=inventory_counts,
+                    rank=start_rank + len(recommendations),
+                    available_only=available_only,
+                    max_missing_count=max_missing_count,
+                    max_cook_time_minutes=max_cook_time_minutes,
+                    difficulty=difficulty,
+                )
+                if item is None:
+                    continue
+                blocked_names.add(self._name_signature(item.name))
+                recommendations.append(item)
+
+            if len(recommendations) >= needed_count:
+                break
 
         return recommendations
 
@@ -165,7 +171,7 @@ class GeminiRecommendationService:
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {
-                "temperature": 0.45,
+                "temperature": 0.35,
                 "topP": 0.9,
                 "maxOutputTokens": 8192,
                 "responseMimeType": "application/json",
@@ -331,7 +337,10 @@ class GeminiRecommendationService:
         max_missing_count: int | None,
         max_cook_time_minutes: int | None,
         difficulty: str | None,
+        retry: bool = False,
     ) -> str:
+        fridge_keys = sorted(key for key, count in inventory_counts.items() if count > 0)
+        fridge_key_text = ", ".join(fridge_keys) if fridge_keys else "none"
         inventory_lines = [
             f"- {key} ({ingredient_display_name(key)}): {count}"
             for key, count in sorted(inventory_counts.items())
@@ -347,6 +356,29 @@ class GeminiRecommendationService:
             f"max_cook_time_minutes={max_cook_time_minutes}",
             f"difficulty={difficulty or 'any'}",
         ]
+        strict_filter_lines: list[str] = []
+        if available_only:
+            strict_filter_lines.append(
+                f"- available_only is true, so ingredient_details[].item_name MUST be only these fridge keys: {fridge_key_text}. Do not add any other core ingredient."
+            )
+        if max_missing_count is not None:
+            strict_filter_lines.append(
+                f"- missing core ingredient count MUST be <= {max_missing_count} after comparing with fridge keys: {fridge_key_text}."
+            )
+        if max_cook_time_minutes is not None:
+            strict_filter_lines.append(
+                f"- cook_time_minutes MUST be <= {max_cook_time_minutes}."
+            )
+        if difficulty:
+            strict_filter_lines.append(
+                f"- difficulty MUST be exactly \"{difficulty}\"."
+            )
+        strict_filter_text = "\n".join(strict_filter_lines) if strict_filter_lines else "- No extra strict filters."
+        retry_text = (
+            "\nPrevious output did not pass backend validation. Retry with stricter compliance to every filter and schema field."
+            if retry
+            else ""
+        )
 
         return f"""
 You are a senior Korean home-cooking alcohol pairing recipe editor.
@@ -378,6 +410,9 @@ Avoid these existing or already shown recipe names:
 Filters:
 {"; ".join(filter_text)}
 
+Strict filter requirements:
+{strict_filter_text}
+
 Quality rules:
 - Return realistic Korean home-cooking snacks, not artificial names.
 - Do not create near-duplicate names or method flows from the blocked names.
@@ -389,7 +424,9 @@ Quality rules:
 - If max_missing_count is set, missing core ingredients must not exceed it.
 - Difficulty should be easy unless the filter explicitly requests another value.
 - Write all user-facing text in Korean.
+- pantry_items[].name and pantry_items[].unit must be Korean user-facing words, such as 식용유/간장/후추 and 큰술/작은술.
 - heat_level must be Korean only: 없음, 약불, 중약불, 중불, 중강불, 강불.
+{retry_text}
 """.strip()
 
     def _candidate_to_recommendation(

@@ -124,3 +124,52 @@ def test_generate_fallback_returns_empty_without_api_key() -> None:
         )
         == []
     )
+
+
+def test_build_prompt_includes_strict_filter_requirements() -> None:
+    service = GeminiRecommendationService(Settings(gemini_api_key=""))
+
+    prompt = service._build_prompt(
+        liquor_key="soju",
+        inventory_counts={"leek": 2, "pork": 1},
+        needed_count=1,
+        existing_names=[],
+        selected_names=[],
+        available_only=True,
+        max_missing_count=0,
+        max_cook_time_minutes=10,
+        difficulty="easy",
+    )
+
+    assert "ingredient_details[].item_name MUST be only these fridge keys: leek, pork" in prompt
+    assert "missing core ingredient count MUST be <= 0" in prompt
+    assert "cook_time_minutes MUST be <= 10" in prompt
+    assert 'difficulty MUST be exactly "easy"' in prompt
+    assert "pantry_items[].name and pantry_items[].unit must be Korean" in prompt
+
+
+def test_generate_fallback_retries_after_failed_payload(monkeypatch) -> None:
+    service = GeminiRecommendationService(Settings(gemini_api_key="test-key"))
+    payloads = [None, {"recommendations": [_candidate().model_dump(mode="json")]}]
+
+    def fake_call_gemini(prompt: str):
+        return payloads.pop(0)
+
+    monkeypatch.setattr(service, "_call_gemini", fake_call_gemini)
+
+    items = service.generate_fallback_recommendations(
+        liquor_key="soju",
+        inventory_counts={"leek": 1},
+        needed_count=1,
+        start_rank=1,
+        existing_names=[],
+        selected_names=[],
+        available_only=False,
+        max_missing_count=None,
+        max_cook_time_minutes=None,
+        difficulty="easy",
+    )
+
+    assert len(items) == 1
+    assert items[0].recommendation_source == "llm_fallback"
+    assert payloads == []
