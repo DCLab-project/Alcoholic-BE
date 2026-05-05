@@ -380,11 +380,11 @@ class SeedQualityGateTest(unittest.TestCase):
 
 class MappingQualityGateTest(unittest.TestCase):
     def test_ingredient_mapping_accepts_korean_and_internal_keys(self) -> None:
-        self.assertEqual("green_onion", normalize_ingredient_key("대파"))
-        self.assertEqual("green_onion", normalize_ingredient_key("green_onion"))
-        self.assertEqual("green_onion", normalize_ingredient_key("leek"))
-        self.assertEqual("green_onion", normalize_ingredient_key("scallion"))
-        self.assertEqual("green_onion", normalize_ingredient_key("spring_onion"))
+        self.assertEqual("leek", normalize_ingredient_key("대파"))
+        self.assertEqual("leek", normalize_ingredient_key("green_onion"))
+        self.assertEqual("leek", normalize_ingredient_key("leek"))
+        self.assertEqual("leek", normalize_ingredient_key("scallion"))
+        self.assertEqual("leek", normalize_ingredient_key("spring_onion"))
         self.assertEqual("pepper", normalize_ingredient_key("파프리카"))
         self.assertEqual("대파", ingredient_display_name("green_onion"))
         self.assertEqual("파프리카", ingredient_display_name("pepper"))

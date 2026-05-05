@@ -272,15 +272,20 @@ Query:
 | `max_missing_count` | number | no | 부족한 핵심 재료 최대 개수 |
 | `max_cook_time_minutes` | number | no | 최대 조리 시간(분) |
 | `difficulty` | string | no | `easy`, `medium`, `hard` |
+| `llm_fallback` | boolean | no | `true`이면 seed 추천이 3개 미만일 때 생성형 추천으로 부족한 추천만 보완 |
 
 필터 예시:
 
 ```text
 /api/v1/recommendations?liquor=레드와인&available_only=true
 /api/v1/recommendations?liquor=소주&max_missing_count=1&max_cook_time_minutes=20&difficulty=easy
+/api/v1/recommendations?liquor=소주&available_only=true&llm_fallback=true
 ```
 
 필터 조건이 강하면 추천이 3개보다 적게 내려올 수 있습니다.
+`llm_fallback=true`를 함께 보내면 BE가 먼저 seed 추천을 찾고, 부족한 개수만 생성형 추천으로 보완합니다.
+생성형 추천 응답은 BE에서 JSON schema, 식재료 key, 재료 보유 상태, 조리 단계 수를 다시 검증한 뒤 통과한 항목만 내려갑니다.
+외부 생성 호출 실패 또는 검증 실패 시 기존 seed 추천 결과만 반환합니다.
 
 Response:
 
@@ -388,9 +393,12 @@ Request:
       "missing_ingredients": []
     }
   ],
-  "refresh_count": 2
+  "refresh_count": 2,
+  "llm_fallback": true
 }
 ```
+
+`llm_fallback=true`이면 고정 추천을 제외하고 새로 채워야 하는 개수가 seed만으로 부족할 때 생성형 보완 추천을 사용할 수 있습니다.
 
 Response:
 

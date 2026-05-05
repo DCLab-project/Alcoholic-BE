@@ -1,0 +1,125 @@
+from app.config.settings import Settings
+from app.services.gemini_recommendation_service import (
+    GeminiIngredient,
+    GeminiPairingKnowledge,
+    GeminiPantryItem,
+    GeminiRecipeCandidate,
+    GeminiRecipeStep,
+    GeminiRecommendationService,
+)
+from app.services.name_mapping import ingredient_display_name, normalize_ingredient_key
+
+
+def _candidate(item_name: str = "tofu") -> GeminiRecipeCandidate:
+    return GeminiRecipeCandidate(
+        name="대파 두부 간장구이",
+        reason="대파와 두부를 노릇하게 구워 소주와 잘 맞는 담백한 안주입니다.",
+        servings=1,
+        cook_time_minutes=18,
+        difficulty="easy",
+        pairing_knowledge=GeminiPairingKnowledge(
+            flavor_logic="구운 대파의 단맛과 두부의 담백함이 술맛을 부드럽게 받쳐줍니다.",
+            ingredient_logic="두부는 물기를 빼고 굽고 대파는 마지막에 넣어 향을 살립니다.",
+            why_this_liquor="소주의 깔끔한 끝맛이 간장 양념과 구운 향을 정리해줍니다.",
+        ),
+        ingredient_details=[
+            GeminiIngredient(
+                item_name="leek",
+                variant_detail="굵은 대파",
+                amount=1,
+                unit="대",
+            ),
+            GeminiIngredient(
+                item_name=item_name,
+                variant_detail="단단한 부침용 두부",
+                amount=150,
+                unit="g",
+            ),
+        ],
+        pantry_items=[
+            GeminiPantryItem(name="식용유", amount=1, unit="큰술"),
+            GeminiPantryItem(name="간장", amount=1, unit="큰술"),
+        ],
+        recipe_steps=[
+            GeminiRecipeStep(
+                step_number=index,
+                title=f"{index}단계",
+                instruction=f"재료 {index}가 잘 보이도록 1분 동안 천천히 준비하세요.",
+                time_minutes=1,
+                heat_level="없음" if index <= 2 else "중불",
+                success_cue="재료 상태가 고르게 맞으면 좋아요.",
+            )
+            for index in range(1, 7)
+        ],
+        tip="두부 물기를 충분히 빼면 팬에 덜 달라붙습니다.",
+        tags=["구이", "소주"],
+    )
+
+
+def test_legacy_green_onion_normalizes_to_leek() -> None:
+    assert normalize_ingredient_key("green_onion") == "leek"
+    assert ingredient_display_name("green_onion") == "대파"
+
+
+def test_candidate_to_recommendation_recomputes_inventory_status() -> None:
+    service = GeminiRecommendationService(Settings(gemini_api_key=""))
+
+    item = service._candidate_to_recommendation(
+        _candidate(),
+        liquor_key="soju",
+        inventory_counts={"leek": 1},
+        rank=2,
+        available_only=False,
+        max_missing_count=None,
+        max_cook_time_minutes=None,
+        difficulty=None,
+    )
+
+    assert item is not None
+    assert item.priority_rank == 2
+    assert item.ingredient_yes == ["대파"]
+    assert item.ingredient_no == ["두부"]
+    assert item.missing_ingredients == ["두부"]
+    assert item.shopping_items == ["두부"]
+    assert [detail.status for detail in item.ingredient_details] == [
+        "available",
+        "missing",
+    ]
+    assert len(item.recipe_steps) == 6
+
+
+def test_candidate_to_recommendation_rejects_unsupported_ingredient_key() -> None:
+    service = GeminiRecommendationService(Settings(gemini_api_key=""))
+
+    item = service._candidate_to_recommendation(
+        _candidate("bacon"),
+        liquor_key="soju",
+        inventory_counts={"leek": 1},
+        rank=1,
+        available_only=False,
+        max_missing_count=None,
+        max_cook_time_minutes=None,
+        difficulty=None,
+    )
+
+    assert item is None
+
+
+def test_generate_fallback_returns_empty_without_api_key() -> None:
+    service = GeminiRecommendationService(Settings(gemini_api_key=""))
+
+    assert (
+        service.generate_fallback_recommendations(
+            liquor_key="soju",
+            inventory_counts={"leek": 1},
+            needed_count=1,
+            start_rank=3,
+            existing_names=[],
+            selected_names=[],
+            available_only=False,
+            max_missing_count=None,
+            max_cook_time_minutes=None,
+            difficulty=None,
+        )
+        == []
+    )

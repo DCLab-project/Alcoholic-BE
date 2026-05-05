@@ -236,6 +236,10 @@ class RecommendationRefreshRequest(BaseModel):
     liquor: str = Field(min_length=1, max_length=100)
     keep_recommendations: list[dict[str, Any]] = Field(default_factory=list)
     refresh_count: int = Field(default=1, ge=0, le=3)
+    llm_fallback: bool = Field(
+        default=False,
+        description="true이면 seed 추천이 부족할 때 생성형 추천으로 부족한 추천만 보완합니다.",
+    )
 
 
 class RecommendationRefreshResponse(BaseModel):

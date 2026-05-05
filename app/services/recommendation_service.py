@@ -19,7 +19,9 @@ from app.schemas.recommendation import (
     RecommendationSubstitutionTip,
     RecommendationsResponse,
 )
+from app.services.gemini_recommendation_service import GeminiRecommendationService
 from app.services.name_mapping import (
+    ingredient_display_name,
     liquor_display_name,
     normalize_ingredient_key,
     normalize_liquor_key,
@@ -406,6 +408,7 @@ class RecommendationService:
         max_missing_count: int | None = None,
         max_cook_time_minutes: int | None = None,
         difficulty: str | None = None,
+        llm_fallback: bool = False,
     ) -> RecommendationsResponse:
         normalized = normalize_liquor_key(liquor or "soju") or "soju"
         difficulty_filter = difficulty.strip().lower() if difficulty else None
@@ -421,7 +424,10 @@ class RecommendationService:
         ranked_candidates: list[dict] = []
 
         for recipe in candidates:
-            required_ingredients = [ingredient.ingredient_name for ingredient in recipe.ingredients]
+            required_ingredients = [
+                normalize_ingredient_key(ingredient.ingredient_name)
+                for ingredient in recipe.ingredients
+            ]
             missing_ingredients = [
                 ingredient_name
                 for ingredient_name in required_ingredients
@@ -431,14 +437,21 @@ class RecommendationService:
             score = (available_count * 3) - (len(missing_ingredients) * 2) + recipe.rank_hint
             ingredient_details = [
                 RecommendationIngredientDetail(
-                    item_name=ingredient.ingredient_name,
-                    display_name=ingredient.display_name or ingredient.ingredient_name,
+                    item_name=normalize_ingredient_key(ingredient.ingredient_name),
+                    display_name=(
+                        ingredient.display_name
+                        or ingredient_display_name(ingredient.ingredient_name)
+                    ),
                     variant_detail=ingredient.variant_detail or "",
                     amount=ingredient.amount,
                     unit=ingredient.unit,
                     status=(
                         "available"
-                        if inventory_counts.get(ingredient.ingredient_name, 0) > 0
+                        if inventory_counts.get(
+                            normalize_ingredient_key(ingredient.ingredient_name),
+                            0,
+                        )
+                        > 0
                         else "missing"
                     ),
                 )
@@ -551,6 +564,23 @@ class RecommendationService:
                 )
             )
 
+        if llm_fallback and len(recommendations) < 3:
+            generated_recommendations = GeminiRecommendationService(
+                self.settings
+            ).generate_fallback_recommendations(
+                liquor_key=normalized,
+                inventory_counts=inventory_counts,
+                needed_count=3 - len(recommendations),
+                start_rank=len(recommendations) + 1,
+                existing_names=[recipe.name for recipe in candidates],
+                selected_names=[item.name for item in recommendations],
+                available_only=available_only,
+                max_missing_count=max_missing_count,
+                max_cook_time_minutes=max_cook_time_minutes,
+                difficulty=difficulty_filter,
+            )
+            recommendations.extend(generated_recommendations)
+
         if self.settings.recommendation_response_delay_seconds > 0:
             time.sleep(self.settings.recommendation_response_delay_seconds)
 
@@ -576,7 +606,11 @@ class RecommendationService:
             if len(fresh_items) >= needed_count:
                 break
 
-            response = self.get_recommendations(normalized, refresh=True)
+            response = self.get_recommendations(
+                normalized,
+                refresh=True,
+                llm_fallback=payload.llm_fallback,
+            )
             for recommendation in response.recommendations:
                 item = recommendation.model_dump(mode="json")
                 name = str(item.get("name") or "")
@@ -594,7 +628,11 @@ class RecommendationService:
 
         combined = kept + fresh_items
         if len(combined) < 3:
-            response = self.get_recommendations(normalized, refresh=True)
+            response = self.get_recommendations(
+                normalized,
+                refresh=True,
+                llm_fallback=payload.llm_fallback,
+            )
             for recommendation in response.recommendations:
                 item = recommendation.model_dump(mode="json")
                 name = str(item.get("name") or "")

@@ -50,6 +50,10 @@ def get_recommendations(
         None,
         description="원하는 난이도입니다. easy, medium, hard 중 하나를 보냅니다.",
     ),
+    llm_fallback: bool = Query(
+        False,
+        description="true이면 seed 추천이 3개 미만일 때 생성형 추천으로 부족한 추천만 보완합니다.",
+    ),
     db: Session = Depends(get_db),
 ) -> RecommendationsResponse:
     service = RecommendationService(db)
@@ -60,6 +64,7 @@ def get_recommendations(
         max_missing_count=max_missing_count,
         max_cook_time_minutes=max_cook_time_minutes,
         difficulty=difficulty,
+        llm_fallback=llm_fallback,
     )
 
 
