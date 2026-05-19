@@ -21,6 +21,7 @@ from app.schemas.inventory import InventoryBulkCreate
 from app.schemas.inventory import InventoryCreateRequest, InventoryUpdateRequest
 from app.schemas.recognition import IngredientStreamEvent, LiquorStreamEvent
 from app.schemas.recommendation import RecommendationRefreshRequest, RecommendationsResponse
+from app.schemas.sensor import SensorEventCreate
 from app.services.favorite_recipe_service import FavoriteRecipeService
 from app.services.inventory_service import InventoryService
 from app.services.name_mapping import (
@@ -30,6 +31,7 @@ from app.services.name_mapping import (
     normalize_liquor_key,
 )
 from app.services.recommendation_service import RecommendationService
+from app.services.sensor_service import SensorService
 
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
@@ -429,6 +431,38 @@ class MappingQualityGateTest(unittest.TestCase):
 
         self.assertNotIn("mock", scan_route_text.lower())
 
+    def test_sensor_event_policy_prioritizes_door_open_over_motion(self) -> None:
+        service = SensorService()
+
+        door_open_event = service.build_sensor_event(
+            SensorEventCreate(
+                device_id="jetson-arduino-bridge",
+                door_open=True,
+                motion_detected=True,
+                source="arduino",
+            )
+        )
+        motion_only_event = service.build_sensor_event(
+            SensorEventCreate(
+                device_id="jetson-arduino-bridge",
+                door_open=False,
+                motion_detected=True,
+                source="arduino",
+            )
+        )
+        standby_event = service.build_sensor_event(
+            SensorEventCreate(
+                device_id="jetson-arduino-bridge",
+                raw={"door": "closed", "pir": 0, "ultrasonic_cm": "42.5"},
+                source="arduino",
+            )
+        )
+
+        self.assertEqual("ingredient_scan", door_open_event.recommended_mode)
+        self.assertEqual("liquor_scan_ready", motion_only_event.recommended_mode)
+        self.assertEqual("standby", standby_event.recommended_mode)
+        self.assertEqual(42.5, standby_event.distance_cm)
+
 
 class PolicyDocumentationQualityGateTest(unittest.TestCase):
     def test_recommendation_policy_documents_seed_and_scoring_rules(self) -> None:
@@ -521,6 +555,9 @@ class SwaggerDocumentationQualityGateTest(unittest.TestCase):
             "`pepper`는 고추가 아니라 파프리카",
         ]
         ai_required_terms = [
+            "POST `/api/v1/sensors/events`",
+            "`GET /api/v1/stream/sensors`",
+            "jetson-arduino-bridge",
             "POST `/api/v1/recognitions/ingredients`",
             "POST `/api/v1/recognitions/liquor`",
             "leek`, `scallion`, `spring_onion`",

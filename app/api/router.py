@@ -7,6 +7,7 @@ from app.api.routes.inventory import router as inventory_router
 from app.api.routes.recognition import router as recognition_router
 from app.api.routes.recommendation import router as recommendation_router
 from app.api.routes.scan import router as scan_router
+from app.api.routes.sensor import router as sensor_router
 
 api_router = APIRouter()
 api_router.include_router(health_router)
@@ -16,3 +17,4 @@ api_router.include_router(events_router)
 api_router.include_router(recommendation_router)
 api_router.include_router(scan_router)
 api_router.include_router(favorite_recipe_router)
+api_router.include_router(sensor_router)

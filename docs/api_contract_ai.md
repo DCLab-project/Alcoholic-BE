@@ -10,6 +10,61 @@
 - confidence: `0.0` 이상 `1.0` 이하, 모르면 생략 가능
 - source: 모델 또는 장치/파이프라인 이름
 
+## Sensor Event (Jetson-Arduino Bridge)
+
+Arduino는 Jetson에 연결된 센서 입력 장치로 사용합니다. 초음파 거리 센서와 모션감지 센서의 판단 결과는 Jetson 또는 Jetson-Arduino bridge 프로세스가 백엔드로 전달합니다. 이 API는 센서 상태를 기록하고 SSE로 전달하기 위한 보조 흐름이며, 실제 식재료/주류 인식 결과는 기존 recognition API로 별도 전송합니다.
+
+### POST `/api/v1/sensors/events`
+
+Request:
+
+```json
+{
+  "device_id": "jetson-arduino-bridge",
+  "door_open": false,
+  "motion_detected": true,
+  "distance_cm": 32.4,
+  "source": "arduino",
+  "raw": {
+    "pir": 1,
+    "ultrasonic_cm": 32.4
+  }
+}
+```
+
+Response:
+
+```json
+{
+  "status": "success",
+  "message": "센서 이벤트가 수신되었습니다.",
+  "event": {
+    "device_id": "jetson-arduino-bridge",
+    "door_open": false,
+    "motion_detected": true,
+    "distance_cm": 32.4,
+    "recommended_mode": "liquor_scan_ready",
+    "timestamp": "2026-05-19T12:00:00Z",
+    "source": "arduino",
+    "raw": {
+      "pir": 1,
+      "ultrasonic_cm": 32.4
+    }
+  }
+}
+```
+
+Mode policy:
+
+- `door_open=true`이면 식재료 반입·반출 가능성을 우선하여 `recommended_mode=ingredient_scan`
+- `door_open=false`이고 `motion_detected=true`이면 주류 촬영 준비 상태로 보고 `recommended_mode=liquor_scan_ready`
+- 두 조건이 모두 아니면 `recommended_mode=standby`
+
+Side effect:
+
+- `GET /api/v1/stream/sensors` 구독자에게 `sensor` 이벤트 발행
+- 이 이벤트만으로 추천을 생성하지 않습니다. 주류 추천은 `/api/v1/recognitions/liquor`로 확정된 주류 카테고리가 전송된 뒤 수행합니다.
+
 ## Ingredient Recognition
 
 ### POST `/api/v1/recognitions/ingredients`
