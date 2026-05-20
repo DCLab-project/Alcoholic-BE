@@ -10,30 +10,30 @@ from app.services.gemini_recommendation_service import (
 from app.services.name_mapping import ingredient_display_name, normalize_ingredient_key
 
 
-def _candidate(item_name: str = "tofu") -> GeminiRecipeCandidate:
+def _candidate(item_name: str = "egg") -> GeminiRecipeCandidate:
     return GeminiRecipeCandidate(
-        name="대파 두부 간장구이",
-        reason="대파와 두부를 노릇하게 구워 소주와 잘 맞는 담백한 안주입니다.",
+        name="대파 달걀 간장구이",
+        reason="대파와 달걀을 노릇하게 구워 소주와 잘 맞는 담백한 안주입니다.",
         servings=1,
         cook_time_minutes=18,
         difficulty="easy",
         pairing_knowledge=GeminiPairingKnowledge(
-            flavor_logic="구운 대파의 단맛과 두부의 담백함이 술맛을 부드럽게 받쳐줍니다.",
-            ingredient_logic="두부는 물기를 빼고 굽고 대파는 마지막에 넣어 향을 살립니다.",
+            flavor_logic="구운 대파의 단맛과 달걀의 고소함이 술맛을 부드럽게 받쳐줍니다.",
+            ingredient_logic="달걀은 풀어서 굽고 대파는 마지막에 넣어 향을 살립니다.",
             why_this_liquor="소주의 깔끔한 끝맛이 간장 양념과 구운 향을 정리해줍니다.",
         ),
         ingredient_details=[
             GeminiIngredient(
-                item_name="leek",
+                item_name="green_onion",
                 variant_detail="굵은 대파",
                 amount=1,
                 unit="대",
             ),
             GeminiIngredient(
                 item_name=item_name,
-                variant_detail="단단한 부침용 두부",
-                amount=150,
-                unit="g",
+                variant_detail="잘 풀어둔 달걀",
+                amount=2,
+                unit="개",
             ),
         ],
         pantry_items=[
@@ -51,13 +51,14 @@ def _candidate(item_name: str = "tofu") -> GeminiRecipeCandidate:
             )
             for index in range(1, 7)
         ],
-        tip="두부 물기를 충분히 빼면 팬에 덜 달라붙습니다.",
+        tip="달걀은 약불에서 천천히 익히면 팬에 덜 달라붙습니다.",
         tags=["구이", "소주"],
     )
 
 
-def test_legacy_green_onion_normalizes_to_leek() -> None:
-    assert normalize_ingredient_key("green_onion") == "leek"
+def test_green_onion_is_canonical_and_leek_is_legacy_alias() -> None:
+    assert normalize_ingredient_key("green_onion") == "green_onion"
+    assert normalize_ingredient_key("leek") == "green_onion"
     assert ingredient_display_name("green_onion") == "대파"
 
 
@@ -67,7 +68,7 @@ def test_candidate_to_recommendation_recomputes_inventory_status() -> None:
     item = service._candidate_to_recommendation(
         _candidate(),
         liquor_key="soju",
-        inventory_counts={"leek": 1},
+        inventory_counts={"green_onion": 1},
         rank=2,
         available_only=False,
         max_missing_count=None,
@@ -79,9 +80,9 @@ def test_candidate_to_recommendation_recomputes_inventory_status() -> None:
     assert item.recommendation_source == "llm_fallback"
     assert item.priority_rank == 2
     assert item.ingredient_yes == ["대파"]
-    assert item.ingredient_no == ["두부"]
-    assert item.missing_ingredients == ["두부"]
-    assert item.shopping_items == ["두부"]
+    assert item.ingredient_no == ["달걀"]
+    assert item.missing_ingredients == ["달걀"]
+    assert item.shopping_items == ["달걀"]
     assert [detail.status for detail in item.ingredient_details] == [
         "available",
         "missing",
@@ -89,13 +90,13 @@ def test_candidate_to_recommendation_recomputes_inventory_status() -> None:
     assert len(item.recipe_steps) == 6
 
 
-def test_candidate_to_recommendation_rejects_unsupported_ingredient_key() -> None:
+def test_candidate_to_recommendation_rejects_non_seed_core_ingredient_key() -> None:
     service = GeminiRecommendationService(Settings(gemini_api_key=""))
 
     item = service._candidate_to_recommendation(
-        _candidate("bacon"),
+        _candidate("ginger"),
         liquor_key="soju",
-        inventory_counts={"leek": 1},
+        inventory_counts={"green_onion": 1},
         rank=1,
         available_only=False,
         max_missing_count=None,
@@ -112,7 +113,7 @@ def test_generate_fallback_returns_empty_without_api_key() -> None:
     assert (
         service.generate_fallback_recommendations(
             liquor_key="soju",
-            inventory_counts={"leek": 1},
+            inventory_counts={"green_onion": 1},
             needed_count=1,
             start_rank=3,
             existing_names=[],
@@ -131,7 +132,7 @@ def test_build_prompt_includes_strict_filter_requirements() -> None:
 
     prompt = service._build_prompt(
         liquor_key="soju",
-        inventory_counts={"leek": 2, "pork": 1},
+        inventory_counts={"green_onion": 2, "pork": 1},
         needed_count=1,
         existing_names=[],
         selected_names=[],
@@ -141,7 +142,7 @@ def test_build_prompt_includes_strict_filter_requirements() -> None:
         difficulty="easy",
     )
 
-    assert "ingredient_details[].item_name MUST be only these fridge keys: leek, pork" in prompt
+    assert "ingredient_details[].item_name MUST be only these fridge keys: green_onion, pork" in prompt
     assert "missing core ingredient count MUST be <= 0" in prompt
     assert "cook_time_minutes MUST be <= 10" in prompt
     assert 'difficulty MUST be exactly "easy"' in prompt
@@ -154,7 +155,7 @@ def test_build_prompt_limits_existing_name_examples() -> None:
 
     prompt = service._build_prompt(
         liquor_key="soju",
-        inventory_counts={"leek": 2},
+        inventory_counts={"green_onion": 2},
         needed_count=1,
         existing_names=existing_names,
         selected_names=[],
@@ -179,7 +180,7 @@ def test_generate_fallback_retries_after_failed_payload(monkeypatch) -> None:
 
     items = service.generate_fallback_recommendations(
         liquor_key="soju",
-        inventory_counts={"leek": 1},
+        inventory_counts={"green_onion": 1},
         needed_count=1,
         start_rank=1,
         existing_names=[],

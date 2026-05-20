@@ -19,9 +19,9 @@ FE/AI가 새 기능을 요청하면 공유 API 시트에 먼저 계약을 적고
 | 기능명 | 추천 카드 즐겨찾기 |
 | 화면/플로우 | 추천 결과 카드에서 저장 버튼 클릭 |
 | Method | `POST` |
-| Path | `/api/v1/recommendations/favorites` |
-| Request | `{ "recipe_name": "돼지고기 대파 소금구이" }` |
-| Response | `{ "status": "success" }` |
+| Path | `/api/v1/favorite-recipes` |
+| Request | `{ "liquor": "소주", "name": "돼지고기 대파 소금구이", "reason": "소주와 잘 어울립니다.", "ingredient_yes": ["대파"], "ingredient_no": ["돼지고기"], "recipe": ["1. 대파를 썹니다."], "missing_ingredients": ["돼지고기"] }` |
+| Response | `{ "status": "success", "favorite_id": 1 }` |
 | FE 영향 | 추천 카드 버튼 상태 추가 |
 | AI 영향 | 없음 |
 | 기존 호환성 | 기존 추천 응답 변경 없음 |

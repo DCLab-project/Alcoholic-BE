@@ -18,17 +18,53 @@ from app.schemas.recommendation import (
     RecommendationSubstitutionTip,
 )
 from app.services.name_mapping import (
-    INGREDIENT_DISPLAY_NAMES,
     ingredient_display_name,
     liquor_display_name,
     normalize_ingredient_key,
 )
 
 
-ALLOWED_INGREDIENT_KEYS = set(INGREDIENT_DISPLAY_NAMES)
+RECOMMENDATION_CORE_INGREDIENT_DISPLAY_NAMES = {
+    "bacon": "베이컨",
+    "beef": "소고기",
+    "bread": "빵",
+    "broccoli": "브로콜리",
+    "butter": "버터",
+    "cabbage": "양배추",
+    "carrot": "당근",
+    "cheese": "치즈",
+    "chicken": "닭고기",
+    "cucumber": "오이",
+    "egg": "달걀",
+    "eggplant": "가지",
+    "fish": "생선살",
+    "garlic": "마늘",
+    "green_onion": "대파",
+    "lettuce": "상추",
+    "milk": "우유",
+    "mushroom": "버섯",
+    "onion": "양파",
+    "pepper": "파프리카",
+    "pork": "돼지고기",
+    "potato": "감자",
+    "sausage": "소시지",
+    "spinach": "시금치",
+    "tomato": "토마토",
+    "yogurt": "요거트",
+    "zucchini": "애호박",
+}
+ALLOWED_INGREDIENT_KEYS = set(RECOMMENDATION_CORE_INGREDIENT_DISPLAY_NAMES)
 _FORBIDDEN_EXTRA_PATTERN = re.compile(r"외\s*\d+\s*가지")
 _VALID_DIFFICULTIES = {"easy", "medium", "hard"}
 _VALID_HEAT_LEVELS = {"없음", "약불", "중약불", "중불", "중강불", "강불"}
+
+
+def _recommendation_ingredient_display_name(value: str) -> str:
+    key = normalize_ingredient_key(value)
+    return RECOMMENDATION_CORE_INGREDIENT_DISPLAY_NAMES.get(
+        key,
+        ingredient_display_name(key),
+    )
 
 
 class GeminiIngredient(BaseModel):
@@ -339,12 +375,16 @@ class GeminiRecommendationService:
         difficulty: str | None,
         retry: bool = False,
     ) -> str:
-        fridge_keys = sorted(key for key, count in inventory_counts.items() if count > 0)
+        fridge_keys = sorted(
+            key
+            for key, count in inventory_counts.items()
+            if count > 0 and key in ALLOWED_INGREDIENT_KEYS
+        )
         fridge_key_text = ", ".join(fridge_keys) if fridge_keys else "none"
         inventory_lines = [
-            f"- {key} ({ingredient_display_name(key)}): {count}"
+            f"- {key} ({_recommendation_ingredient_display_name(key)}): {count}"
             for key, count in sorted(inventory_counts.items())
-            if count > 0
+            if count > 0 and key in ALLOWED_INGREDIENT_KEYS
         ]
         inventory_text = "\n".join(inventory_lines) if inventory_lines else "- 없음"
         allowed_key_text = ", ".join(sorted(ALLOWED_INGREDIENT_KEYS))
@@ -397,7 +437,7 @@ Allowed core ingredient keys:
 Important ingredient rules:
 - Use only allowed core ingredient keys in ingredient_details[].item_name.
 - pepper means paprika, not chili pepper.
-- leek means Korean 대파. Do not use green_onion in new output.
+- green_onion means Korean 대파. Treat leek, scallion, and spring_onion as legacy aliases only.
 - fish means general fish fillet; salmon means salmon.
 - Pantry items may include common seasoning/oil/salt/sugar/soy sauce/vinegar/pepper powder in pantry_items only.
 - Do not put pantry items in ingredient_details.
@@ -465,7 +505,7 @@ Quality rules:
             ingredient_details.append(
                 RecommendationIngredientDetail(
                     item_name=key,
-                    display_name=ingredient_display_name(key),
+                    display_name=_recommendation_ingredient_display_name(key),
                     variant_detail=ingredient.variant_detail,
                     amount=ingredient.amount,
                     unit=ingredient.unit,

@@ -42,7 +42,7 @@ RECOMMENDATIONS_RESPONSE_EXAMPLE = {
                     "status": "missing",
                 },
                 {
-                    "item_name": "leek",
+                    "item_name": "green_onion",
                     "display_name": "대파",
                     "variant_detail": "굵은 대파",
                     "amount": 1,

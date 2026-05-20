@@ -17,7 +17,7 @@ INGREDIENT_DISPLAY_NAMES: dict[str, str] = {
     "eggplant": "가지",
     "fish": "생선살",
     "garlic": "마늘",
-    "leek": "대파",
+    "green_onion": "대파",
     "lettuce": "상추",
     "milk": "우유",
     "mushroom": "버섯",
@@ -71,7 +71,7 @@ _INGREDIENT_ALIASES: dict[str, tuple[str, ...]] = {
         "동태살",
     ),
     "garlic": ("마늘", "다진마늘", "다진 마늘", "통마늘"),
-    "leek": (
+    "green_onion": (
         "대파",
         "파",
         "leek",

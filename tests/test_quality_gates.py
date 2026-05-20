@@ -43,6 +43,7 @@ SCAN_ROUTE_PATH = ROOT_DIR / "app" / "api" / "routes" / "scan.py"
 RECOGNITION_SERVICE_PATH = ROOT_DIR / "app" / "services" / "recognition_service.py"
 OPERATIONS_READINESS_PATH = ROOT_DIR / "docs" / "operations_readiness.md"
 DB_INIT_SCRIPT_PATH = ROOT_DIR / "scripts" / "initialize_database.py"
+HARDWARE_SMOKE_SCRIPT_PATH = ROOT_DIR / "scripts" / "smoke_hardware_flow.py"
 FE_API_CONTRACT_PATH = ROOT_DIR / "docs" / "api_contract_fe.md"
 AI_API_CONTRACT_PATH = ROOT_DIR / "docs" / "api_contract_ai.md"
 API_CHANGE_WORKFLOW_PATH = ROOT_DIR / "docs" / "api_change_workflow.md"
@@ -382,11 +383,11 @@ class SeedQualityGateTest(unittest.TestCase):
 
 class MappingQualityGateTest(unittest.TestCase):
     def test_ingredient_mapping_accepts_korean_and_internal_keys(self) -> None:
-        self.assertEqual("leek", normalize_ingredient_key("대파"))
-        self.assertEqual("leek", normalize_ingredient_key("green_onion"))
-        self.assertEqual("leek", normalize_ingredient_key("leek"))
-        self.assertEqual("leek", normalize_ingredient_key("scallion"))
-        self.assertEqual("leek", normalize_ingredient_key("spring_onion"))
+        self.assertEqual("green_onion", normalize_ingredient_key("대파"))
+        self.assertEqual("green_onion", normalize_ingredient_key("green_onion"))
+        self.assertEqual("green_onion", normalize_ingredient_key("leek"))
+        self.assertEqual("green_onion", normalize_ingredient_key("scallion"))
+        self.assertEqual("green_onion", normalize_ingredient_key("spring_onion"))
         self.assertEqual("pepper", normalize_ingredient_key("파프리카"))
         self.assertEqual("대파", ingredient_display_name("green_onion"))
         self.assertEqual("파프리카", ingredient_display_name("pepper"))
@@ -551,7 +552,7 @@ class SwaggerDocumentationQualityGateTest(unittest.TestCase):
             "`difficulty`",
             "`shopping_items`",
             "`substitution_tips`",
-            "`leek` | 대파",
+            "`green_onion` | 대파",
             "`pepper`는 고추가 아니라 파프리카",
         ]
         ai_required_terms = [
@@ -627,6 +628,49 @@ class OperationsReadinessQualityGateTest(unittest.TestCase):
 
         self.assertIn("docs/operations_readiness.md", readme_text)
         self.assertIn("scripts/initialize_database.py", readme_text)
+
+    def test_readme_documents_current_hardware_integration_flow(self) -> None:
+        readme_text = README_PATH.read_text(encoding="utf-8")
+
+        required_terms = [
+            "`POST /api/v1/scan/ingredients/start`",
+            "`POST /api/v1/scan/liquor/start`",
+            "`/api/v1/recognitions/ingredients`",
+            "`/api/v1/recognitions/liquor`",
+            "`POST /api/v1/sensors/events`",
+            "`GET /api/v1/stream/sensors`",
+            "scripts/smoke_hardware_flow.py",
+            "Gemini 보조 fallback 추천",
+            "AI팀 Jetson/Arduino 실제 payload 기준 현장 E2E 테스트",
+        ]
+
+        for term in required_terms:
+            with self.subTest(term=term):
+                self.assertIn(term, readme_text)
+
+        self.assertNotIn("mock 수동 스캔 흐름", readme_text)
+        self.assertNotIn("실제 Gemini / LLM 추천 생성", readme_text)
+
+    def test_hardware_smoke_script_covers_sensor_recognition_and_recommendation_flow(
+        self,
+    ) -> None:
+        script_text = HARDWARE_SMOKE_SCRIPT_PATH.read_text(encoding="utf-8")
+
+        required_terms = [
+            '"/api/v1/scan/ingredients/start"',
+            '"/api/v1/sensors/events"',
+            '"/api/v1/recognitions/ingredients"',
+            '"/api/v1/inventory/bulk"',
+            '"/api/v1/scan/liquor/start"',
+            '"/api/v1/recognitions/liquor"',
+            '"/api/v1/recommendations"',
+            '"ingredient_scan"',
+            '"liquor_scan_ready"',
+        ]
+
+        for term in required_terms:
+            with self.subTest(term=term):
+                self.assertIn(term, script_text)
 
 
 class ServiceQualityGateTest(unittest.TestCase):
