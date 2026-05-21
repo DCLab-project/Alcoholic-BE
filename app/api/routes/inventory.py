@@ -8,13 +8,17 @@ from app.schemas.inventory import (
     InventoryBulkResponse,
     InventoryCreateRequest,
     InventoryDeleteResponse,
+    InventoryEventCreate,
+    InventoryEventResponse,
     InventoryListResponse,
     InventoryMutationResponse,
     InventoryQuantityPatchRequest,
     InventoryQuantityPatchResponse,
     InventoryUpdateRequest,
 )
+from app.schemas.recognition import IngredientLiveRecognitionCreate
 from app.services.inventory_service import InventoryService
+from app.services.recognition_service import RecognitionService
 
 router = APIRouter(prefix="/api/v1/inventory", tags=["재고 관리"])
 
@@ -86,6 +90,38 @@ def patch_inventory_quantity(
     repository = InventoryRepository(db)
     service = InventoryService(db, repository)
     return service.patch_inventory_quantity(payload)
+
+
+@router.post(
+    "/events",
+    response_model=InventoryEventResponse,
+    status_code=201,
+    summary="AI 식재료 입출고 이벤트 반영",
+    description=(
+        "Jetson이 식재료 tracking 방향까지 확정했을 때 호출합니다. "
+        "action=add는 기존 식재료 인식 SSE로 변환해 FE 확인 화면에 표시하고, "
+        "action=subtract는 FE에 표시하지 않고 재고만 감소시킵니다."
+    ),
+)
+async def apply_ai_inventory_event(
+    payload: InventoryEventCreate,
+    db: Session = Depends(get_db),
+) -> InventoryEventResponse:
+    repository = InventoryRepository(db)
+    service = InventoryService(db, repository)
+    response = service.apply_ai_inventory_event(payload)
+
+    if payload.action == "add":
+        await RecognitionService().publish_ingredient_live_result(
+            IngredientLiveRecognitionCreate(
+                ingredient_name=payload.ingredient_name,
+                timestamp=payload.timestamp,
+                confidence=payload.confidence,
+                source=payload.source,
+            )
+        )
+
+    return response
 
 
 @router.patch(

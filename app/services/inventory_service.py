@@ -8,6 +8,8 @@ from app.schemas.inventory import (
     InventoryBulkResponse,
     InventoryCreateRequest,
     InventoryDeleteResponse,
+    InventoryEventCreate,
+    InventoryEventResponse,
     InventoryItemData,
     InventoryListResponse,
     InventoryMutationResponse,
@@ -201,4 +203,39 @@ class InventoryService:
             status="success",
             ingredient_name=ingredient_display_name(ingredient_name),
             current_quantity=current_quantity,
+        )
+
+    def apply_ai_inventory_event(
+        self,
+        payload: InventoryEventCreate,
+    ) -> InventoryEventResponse:
+        ingredient_name = normalize_ingredient_key(payload.ingredient_name)
+        if payload.action == "add":
+            return InventoryEventResponse(
+                status="success",
+                ingredient_name=ingredient_display_name(ingredient_name),
+                action=payload.action,
+                quantity=payload.quantity,
+                current_quantity=self._current_quantity(ingredient_name),
+            )
+
+        delta = -payload.quantity
+        inventory_item = self.repository.upsert_inventory_count(ingredient_name, delta)
+        self.repository.create_event(
+            item_name=ingredient_name,
+            event_type=payload.action,
+            quantity=payload.quantity,
+            confidence=payload.confidence if payload.confidence is not None else 1.0,
+            source=payload.source,
+            detected_at=payload.timestamp,
+        )
+        self.db.commit()
+        self.db.refresh(inventory_item)
+
+        return InventoryEventResponse(
+            status="success",
+            ingredient_name=ingredient_display_name(ingredient_name),
+            action=payload.action,
+            quantity=payload.quantity,
+            current_quantity=self._current_quantity(ingredient_name),
         )

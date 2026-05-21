@@ -95,6 +95,50 @@ Side effect:
 
 - `GET /api/v1/stream/ingredients` 구독자에게 `ingredient_name`, `timestamp` 이벤트 발행
 
+### POST `/api/v1/inventory/events`
+
+Jetson이 식재료 tracking 세션에서 식재료 class와 이동 방향을 모두 확정했을 때 호출합니다. 이 API는 FE 코드를 수정하지 않기 위한 BE bridge endpoint입니다. `add`는 기존 식재료 인식 SSE로 변환해 FE의 식재료 확인 화면에 표시하고, `subtract`는 사용자 화면에 별도 노출하지 않고 재고만 차감합니다.
+
+AI 내부 direction은 BE로 보내기 전에 `action`으로 변환합니다.
+
+```text
+direction=input  -> action=add       -> FE 식재료 인식 화면 표시, 재고 자동 증가 없음
+direction=output -> action=subtract  -> FE 표시 없음, 재고 차감
+direction 불명확 -> POST하지 않음
+```
+
+Request:
+
+```json
+{
+  "ingredient_name": "green_onion",
+  "action": "add",
+  "quantity": 1,
+  "confidence": 0.93,
+  "source": "jetson-ingredient-tracker"
+}
+```
+
+Response:
+
+```json
+{
+  "status": "success",
+  "ingredient_name": "대파",
+  "action": "add",
+  "quantity": 1,
+  "current_quantity": 3
+}
+```
+
+AI send rules:
+
+- tracking 세션이 끝났을 때 1회만 전송합니다.
+- winner class가 없거나 confidence 기준을 넘지 못하면 전송하지 않습니다.
+- direction이 `input` 또는 `output`으로 확정되지 않으면 전송하지 않습니다.
+- `input`은 `add`로 보내며, BE가 기존 `/api/v1/recognitions/ingredients`와 같은 식재료 SSE를 발행합니다. 실제 재고 증가는 사용자가 FE에서 저장할 때 `/api/v1/inventory/bulk`로 처리됩니다.
+- `output`은 `subtract`로 보내며, BE가 재고만 차감합니다. FE 식재료 인식 화면에는 표시하지 않습니다.
+
 ## Ingredient Key Policy
 
 BE/AI 통합 기준 식재료 key는 30개입니다.

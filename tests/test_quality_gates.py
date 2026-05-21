@@ -12,13 +12,17 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.db import Base
-from app.domain.models import InventoryItem
+from app.domain.models import InventoryEvent, InventoryItem
 from app.repositories.favorite_recipe_repository import FavoriteRecipeRepository
 from app.repositories.inventory_repository import InventoryRepository
 from app.seeds.recommendation_seed import seed_recommendation_data
 from app.schemas.favorite_recipe import FavoriteRecipeCreate
 from app.schemas.inventory import InventoryBulkCreate
-from app.schemas.inventory import InventoryCreateRequest, InventoryUpdateRequest
+from app.schemas.inventory import (
+    InventoryCreateRequest,
+    InventoryEventCreate,
+    InventoryUpdateRequest,
+)
 from app.schemas.recognition import IngredientStreamEvent, LiquorStreamEvent
 from app.schemas.recommendation import RecommendationRefreshRequest, RecommendationsResponse
 from app.schemas.sensor import SensorEventCreate
@@ -563,6 +567,9 @@ class SwaggerDocumentationQualityGateTest(unittest.TestCase):
             "`GET /api/v1/stream/sensors`",
             "jetson-arduino-bridge",
             "POST `/api/v1/recognitions/ingredients`",
+            "POST `/api/v1/inventory/events`",
+            "direction=input  -> action=add",
+            "direction=output -> action=subtract",
             "POST `/api/v1/recognitions/liquor`",
             "leek`, `scallion`, `spring_onion`",
             "BE에서 `green_onion`으로 정규화",
@@ -643,8 +650,8 @@ class OperationsReadinessQualityGateTest(unittest.TestCase):
             "`POST /api/v1/sensors/events`",
             "`GET /api/v1/stream/sensors`",
             "scripts/smoke_hardware_flow.py",
-            "Gemini 보조 fallback 추천",
-            "AI팀 Jetson/Arduino 실제 payload 기준 현장 E2E 테스트",
+            "llm_fallback=true",
+            "AI/Jetson 계약은 `docs/api_contract_ai.md`",
         ]
 
         for term in required_terms:
@@ -749,6 +756,46 @@ class ServiceQualityGateTest(unittest.TestCase):
         self.assertEqual(2, renamed.current_quantity)
         self.assertIn("양파", quantities)
         self.assertNotIn("대파", quantities)
+
+    def test_ai_inventory_events_bridge_add_and_subtract_stock(self) -> None:
+        service = InventoryService(self.db, InventoryRepository(self.db))
+
+        added = service.apply_ai_inventory_event(
+            InventoryEventCreate(
+                ingredient_name="green_onion",
+                action="add",
+                quantity=2,
+                confidence=0.93,
+                source="jetson-ingredient-tracker",
+            )
+        )
+        before_subtract = service.add_inventory_item(
+            InventoryCreateRequest(ingredient_name="green_onion", quantity=2)
+        )
+        subtracted = service.apply_ai_inventory_event(
+            InventoryEventCreate(
+                ingredient_name="green_onion",
+                action="subtract",
+                quantity=1,
+                confidence=0.91,
+                source="jetson-ingredient-tracker",
+            )
+        )
+
+        events = self.db.query(InventoryEvent).order_by(InventoryEvent.id.asc()).all()
+
+        self.assertEqual("success", added.status)
+        self.assertEqual("add", added.action)
+        self.assertEqual(0, added.current_quantity)
+        self.assertEqual(2, before_subtract.current_quantity)
+        self.assertEqual("subtract", subtracted.action)
+        self.assertEqual(1, subtracted.current_quantity)
+        self.assertEqual(["manual_add", "subtract"], [event.event_type for event in events[-2:]])
+        self.assertEqual([2, 1], [event.quantity for event in events[-2:]])
+        self.assertEqual(
+            ["manual_inventory_create", "jetson-ingredient-tracker"],
+            [event.source for event in events[-2:]],
+        )
 
     def test_favorite_recipe_crud_preserves_recommendation_payload(self) -> None:
         service = FavoriteRecipeService(

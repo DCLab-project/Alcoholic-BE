@@ -349,46 +349,10 @@ AI/Jetson 계약은 `docs/api_contract_ai.md`를 기준으로 맞춥니다.
 
 - 기본값: `sqlite:///./alcoholic.db`
 
-즉 지금은 빠른 개발과 프론트 연동 테스트를 위해 파일 DB를 사용합니다.
-이후 팀 기준 구조에 맞춰 MySQL로 전환할 예정입니다.
+로컬 개발과 프론트 연동 테스트는 파일 DB 기준으로 실행합니다.
+MySQL 환경에서는 `DATABASE_URL`만 교체해 같은 SQLAlchemy repository/service 계층을 사용합니다.
 
-현재 코드는 SQLAlchemy 계층을 분리해두었기 때문에, 다음 단계에서 MySQL 전환이 가능하도록 준비돼 있습니다.
-
-## 11. 현재 구현 상태에서 정직하게 말할 것
-현재 구현은 “기초 통합 테스트가 되는 상태”입니다.
-
-이미 되는 것:
-- 재고 조회 / 일괄 저장 / 수량 조절
-- 식재료 SSE
-- 주류 SSE
-- 추천 SSE
-- 센서 SSE
-- 스캔 요청과 실제 인식 결과 전달 분리
-- Jetson/AI 식재료·주류 인식 결과 수신 API
-- Arduino 센서 이벤트 수신 API
-- 로컬 FE(CORS) 연동
-- seed DB 기반 추천 3개 반환
-- Gemini 보조 fallback 추천
-- 즐겨찾기 레시피 저장 / 조회 / 상세 / 삭제
-
-아직 안 된 것:
-- AI팀 Jetson/Arduino 실제 payload 기준 현장 E2E 테스트
-- MySQL 실제 서버 전환 및 통합 테스트
-- Gemini 생성 후보의 운영 seed 영구 편입
-- 추천 이력 기반 분석 화면
-- 최종 모형 냉장고 배선/브라우저 실행/시연 리허설
-
-## 12. 다음 우선순위
-다음 개발 우선순위는 아래와 같습니다.
-
-1. AI팀 Jetson/Arduino payload 계약 확정
-2. `scripts/smoke_hardware_flow.py`로 센서-인식-재고-추천 E2E 확인
-3. FE 최신 브랜치와 SSE/추천/즐겨찾기 화면 연동 재검증
-4. MySQL `DATABASE_URL` 전환 후 `scripts/initialize_database.py` 실행
-5. 최종 시연용 실행 명령, 환경 변수, 네트워크 주소 고정
-6. Gemini 생성 후보를 운영 seed에 편입할지 여부 결정
-
-## 13. 주의 사항
+## 11. 주의 사항
 - 내부 key는 영어 기준으로 통일합니다.
   - 예: `green_onion`, `onion`, `soju`
 - 프론트 화면 표시는 필요할 때 별도 한글 매핑으로 처리하는 방식을 권장합니다.
