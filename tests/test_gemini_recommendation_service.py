@@ -90,11 +90,11 @@ def test_candidate_to_recommendation_recomputes_inventory_status() -> None:
     assert len(item.recipe_steps) == 6
 
 
-def test_candidate_to_recommendation_rejects_non_seed_core_ingredient_key() -> None:
+def test_candidate_to_recommendation_rejects_retired_ingredient_key() -> None:
     service = GeminiRecommendationService(Settings(gemini_api_key=""))
 
     item = service._candidate_to_recommendation(
-        _candidate("ginger"),
+        _candidate("bacon"),
         liquor_key="soju",
         inventory_counts={"green_onion": 1},
         rank=1,

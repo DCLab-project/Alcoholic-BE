@@ -97,20 +97,20 @@ Side effect:
 
 ## Ingredient Key Policy
 
-BE 추천 seed core ingredient key는 27개입니다.
+BE/AI 통합 기준 식재료 key는 30개입니다.
 
 ```text
-bacon, beef, bread, broccoli, butter, cabbage, carrot, cheese, chicken,
+beef, bread, broccoli, butter, cabbage, carrot, cheese, chicken,
 cucumber, egg, eggplant, fish, garlic, green_onion, lettuce, milk,
-mushroom, onion, pepper, pork, potato, sausage, spinach, tomato,
-yogurt, zucchini
+mushroom, onion, pepper, pork, potato, sausage, tomato, zucchini,
+lemon, avocado, radish, tofu, ginger, salmon
 ```
 
 AI label 차이 처리:
 
 - `beef`, `pork`는 AI 추가 예정 클래스이므로 BE seed core ingredient로 사용합니다.
 - `leek`, `scallion`, `spring_onion`은 BE에서 `green_onion`으로 정규화합니다.
-- `ginger`는 AI label에는 있을 수 있지만 추천 seed core ingredient로 사용하지 않습니다.
+- `lemon`, `avocado`, `radish`, `tofu`, `ginger`, `salmon`은 AI/BE 통합 기준에서 허용합니다.
 - `pepper`는 고추가 아니라 파프리카입니다.
 - `fish`, `mushroom`, `cheese`는 broad key입니다. AI/BE 모두 세부 품종을 확정하지 않습니다.
 

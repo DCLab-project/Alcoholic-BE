@@ -33,7 +33,7 @@ Create tables and load recommendation seed data:
 ```
 
 The initializer creates the schema and syncs `seeds/recommendations.json` into
-the recipe tables. The expected current seed size is 210 recipes: 30 recipes
+the recipe tables. The expected current seed size is 350 recipes: 50 recipes
 for each of the 7 liquor categories.
 
 Run the backend:

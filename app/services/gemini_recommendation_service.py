@@ -25,7 +25,6 @@ from app.services.name_mapping import (
 
 
 RECOMMENDATION_CORE_INGREDIENT_DISPLAY_NAMES = {
-    "bacon": "베이컨",
     "beef": "소고기",
     "bread": "빵",
     "broccoli": "브로콜리",
@@ -48,10 +47,14 @@ RECOMMENDATION_CORE_INGREDIENT_DISPLAY_NAMES = {
     "pork": "돼지고기",
     "potato": "감자",
     "sausage": "소시지",
-    "spinach": "시금치",
     "tomato": "토마토",
-    "yogurt": "요거트",
     "zucchini": "애호박",
+    "lemon": "레몬",
+    "avocado": "아보카도",
+    "radish": "무",
+    "tofu": "두부",
+    "ginger": "생강",
+    "salmon": "연어",
 }
 ALLOWED_INGREDIENT_KEYS = set(RECOMMENDATION_CORE_INGREDIENT_DISPLAY_NAMES)
 _FORBIDDEN_EXTRA_PATTERN = re.compile(r"외\s*\d+\s*가지")

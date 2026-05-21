@@ -79,7 +79,7 @@ Gemini 호출 실패 또는 검증 실패 시에는 기존 seed 추천 결과만
 - `docs/recommendation_knowledge.md`
 - `docs/recommendation_policy.md`
 
-현재는 아래 7개 주류에 대해 각 30개씩, 총 210개 seed가 들어 있습니다.
+현재는 아래 7개 주류에 대해 각 50개씩, 총 350개 seed가 들어 있습니다.
 
 - `soju`
 - `beer`

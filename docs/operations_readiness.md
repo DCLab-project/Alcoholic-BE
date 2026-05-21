@@ -6,7 +6,7 @@
 
 - 기본 API 계약은 유지합니다: `inventory`, `stream`, `scan`, `recommendations`.
 - 추천은 실시간 LLM 생성이 아니라 검수된 seed 레시피 DB에서 현재 재고와 주류를 기준으로 고릅니다.
-- 현재 seed는 7개 주류 x 30개, 총 210개입니다.
+- 현재 seed는 7개 주류 x 50개, 총 350개입니다.
 - 현재 로컬 기본 DB는 SQLite `alcoholic.db`입니다.
 - MySQL 전환을 위해 `DATABASE_URL`만 바꾸면 같은 모델과 seed 적재 흐름을 사용할 수 있게 준비합니다.
 - 추천 응답 지연은 기본값 `RECOMMENDATION_RESPONSE_DELAY_SECONDS=0`으로 두고, FE 로딩 UI 테스트가 필요할 때만 조절합니다.

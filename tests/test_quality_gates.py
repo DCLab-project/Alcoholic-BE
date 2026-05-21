@@ -49,7 +49,6 @@ AI_API_CONTRACT_PATH = ROOT_DIR / "docs" / "api_contract_ai.md"
 API_CHANGE_WORKFLOW_PATH = ROOT_DIR / "docs" / "api_change_workflow.md"
 
 ALLOWED_INGREDIENT_KEYS = {
-    "bacon",
     "beef",
     "bread",
     "broccoli",
@@ -72,20 +71,24 @@ ALLOWED_INGREDIENT_KEYS = {
     "pork",
     "potato",
     "sausage",
-    "spinach",
     "tomato",
-    "yogurt",
     "zucchini",
+    "lemon",
+    "avocado",
+    "radish",
+    "tofu",
+    "ginger",
+    "salmon",
 }
 
 EXPECTED_LIQUOR_COUNTS = {
-    "soju": 30,
-    "beer": 30,
-    "red_wine": 30,
-    "white_wine": 30,
-    "sparkling_wine": 30,
-    "whisky": 30,
-    "sake": 30,
+    "soju": 50,
+    "beer": 50,
+    "red_wine": 50,
+    "white_wine": 50,
+    "sparkling_wine": 50,
+    "whisky": 50,
+    "sake": 50,
 }
 
 LIQUOR_DISPLAY_NAMES = {
@@ -563,7 +566,7 @@ class SwaggerDocumentationQualityGateTest(unittest.TestCase):
             "POST `/api/v1/recognitions/liquor`",
             "leek`, `scallion`, `spring_onion`",
             "BE에서 `green_onion`으로 정규화",
-            "ginger`는 AI label에는 있을 수 있지만 추천 seed core ingredient로 사용하지 않습니다",
+            "lemon, avocado, radish, tofu, ginger, salmon",
             "soju, beer, red_wine, white_wine, sparkling_wine, whisky, sake",
         ]
         workflow_required_terms = [
