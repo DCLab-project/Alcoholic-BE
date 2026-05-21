@@ -36,3 +36,4 @@ class EventBroker:
 ingredient_event_broker = EventBroker("ingredient")
 liquor_event_broker = EventBroker("liquor")
 recommendation_event_broker = EventBroker("recommendation")
+sensor_event_broker = EventBroker("sensor")

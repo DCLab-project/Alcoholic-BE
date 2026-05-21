@@ -77,3 +77,18 @@ class RecipeIngredient(Base):
     unit: Mapped[str] = mapped_column(String(20), default="개")
 
     recipe: Mapped["Recipe"] = relationship(back_populates="ingredients")
+
+
+class FavoriteRecipe(Base):
+    __tablename__ = "favorite_recipes"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    liquor: Mapped[str] = mapped_column(String(50), index=True)
+    name: Mapped[str] = mapped_column(String(200), index=True)
+    reason: Mapped[str] = mapped_column(Text, default="")
+    ingredient_yes_text: Mapped[str] = mapped_column(Text, default="[]")
+    ingredient_no_text: Mapped[str] = mapped_column(Text, default="[]")
+    recipe_text: Mapped[str] = mapped_column(Text, default="[]")
+    missing_ingredients_text: Mapped[str] = mapped_column(Text, default="[]")
+    payload_text: Mapped[str] = mapped_column(Text, default="{}")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)

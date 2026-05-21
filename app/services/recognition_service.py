@@ -1,10 +1,11 @@
 import asyncio
 from datetime import datetime, timezone
-from random import choice
 
 from app.db import SessionLocal
 from app.schemas.recognition import (
     IngredientLiveRecognitionCreate,
+    IngredientScanStartRequest,
+    IngredientScanStartResponse,
     IngredientStreamEvent,
     LiquorLiveRecognitionCreate,
     LiquorScanStartRequest,
@@ -26,17 +27,6 @@ from app.services.name_mapping import (
 from app.services.recommendation_service import RecommendationService
 
 
-MOCK_LIQUOR_SCAN_CANDIDATES: tuple[str, ...] = (
-    "soju",
-    "beer",
-    "red_wine",
-    "white_wine",
-    "sparkling_wine",
-    "whisky",
-    "sake",
-)
-
-
 class RecognitionService:
     async def publish_ingredient_live_result(
         self, payload: IngredientLiveRecognitionCreate
@@ -45,6 +35,7 @@ class RecognitionService:
         event_payload = IngredientStreamEvent(
             ingredient_name=ingredient_display_name(ingredient_key),
             timestamp=payload.timestamp,
+            scan_request_id=payload.scan_request_id,
         )
         await ingredient_event_broker.publish(event_payload.model_dump(mode="json"))
         return LiveRecognitionAcceptedResponse(
@@ -59,6 +50,7 @@ class RecognitionService:
         event_payload = LiquorStreamEvent(
             liquor_name=liquor_display_name(liquor_key),
             timestamp=payload.timestamp,
+            scan_request_id=payload.scan_request_id,
         )
         await liquor_event_broker.publish(event_payload.model_dump(mode="json"))
         asyncio.create_task(self._publish_recommendation_event(liquor_key))
@@ -70,27 +62,28 @@ class RecognitionService:
     async def start_liquor_scan(
         self, payload: LiquorScanStartRequest
     ) -> LiquorScanStartResponse:
+        _ = payload
         scan_request_id = (
             f"liquor-scan-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S%f')[:-3]}"
         )
-        asyncio.create_task(self._mock_liquor_scan_flow(payload.device_id))
         return LiquorScanStartResponse(
             status="accepted",
             message="주류 스캔을 시작했습니다.",
             scan_request_id=scan_request_id,
         )
 
-    async def _mock_liquor_scan_flow(self, device_id: str) -> None:
-        # FE가 스캔 중 상태를 잠깐 보여줄 수 있도록 약간의 지연 후
-        # mock 주류 인식 결과를 발행합니다.
-        await asyncio.sleep(3.0)
-        payload = LiquorLiveRecognitionCreate(
-            liquor_name=choice(MOCK_LIQUOR_SCAN_CANDIDATES),
-            timestamp=datetime.now(timezone.utc),
-            confidence=0.99,
-            source=f"manual_scan_mock:{device_id}",
+    async def start_ingredient_scan(
+        self, payload: IngredientScanStartRequest
+    ) -> IngredientScanStartResponse:
+        _ = payload
+        scan_request_id = (
+            f"ingredient-scan-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S%f')[:-3]}"
         )
-        await self.publish_liquor_live_result(payload)
+        return IngredientScanStartResponse(
+            status="accepted",
+            message="식재료 스캔을 시작했습니다.",
+            scan_request_id=scan_request_id,
+        )
 
     async def _publish_recommendation_event(self, liquor_name: str) -> None:
         liquor_key = normalize_liquor_key(liquor_name)

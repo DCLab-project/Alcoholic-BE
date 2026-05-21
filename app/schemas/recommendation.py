@@ -1,3 +1,5 @@
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 
@@ -65,6 +67,14 @@ RECOMMENDATIONS_RESPONSE_EXAMPLE = {
                 {"name": "식용유", "amount": 1, "unit": "큰술"},
                 {"name": "소금", "amount": 0.3, "unit": "작은술"},
                 {"name": "후추", "amount": 0.2, "unit": "작은술"},
+            ],
+            "shopping_items": ["돼지고기"],
+            "substitution_tips": [
+                {
+                    "missing_ingredient": "돼지고기",
+                    "suggestion": "소고기 또는 닭고기",
+                    "note": "고기 종류가 바뀌면 같은 크기로 썰고 중심까지 익혀주세요.",
+                }
             ],
             "recipe": [
                 "1. 재료 손질: 돼지고기, 대파, 상추를 먹기 좋은 크기로 준비하고, 물기가 있는 재료는 키친타월로 가볍게 눌러주세요.",
@@ -138,6 +148,12 @@ class RecommendationPantryItem(BaseModel):
     unit: str = Field(description="수량 단위")
 
 
+class RecommendationSubstitutionTip(BaseModel):
+    missing_ingredient: str = Field(description="부족한 핵심 재료 이름")
+    suggestion: str = Field(description="대체 후보 또는 구매 권장 안내")
+    note: str = Field(description="대체할 때 FE에 보여줄 짧은 주의 문구")
+
+
 class RecommendationRecipeStep(BaseModel):
     step_number: int = Field(description="조리 단계 번호")
     title: str = Field(description="단계 제목")
@@ -163,6 +179,10 @@ class RecommendationScoreBreakdown(BaseModel):
 class RecommendationItem(BaseModel):
     name: str = Field(description="추천 안주 이름")
     reason: str = Field(description="해당 안주를 추천하는 이유")
+    recommendation_source: str = Field(
+        default="seed",
+        description="추천 출처입니다. seed 또는 llm_fallback 값을 사용합니다.",
+    )
     priority_rank: int = Field(description="현재 추천 결과 내 우선순위")
     priority_reason: str = Field(description="이 안주가 현재 순위로 선택된 이유")
     selection_factors: list[str] = Field(description="우선순위 산정에 반영된 핵심 요인")
@@ -190,6 +210,14 @@ class RecommendationItem(BaseModel):
     pantry_item_details: list[RecommendationPantryItem] = Field(
         description="정량화된 기본 양념 목록"
     )
+    shopping_items: list[str] = Field(
+        default_factory=list,
+        description="장보기 UI에 바로 표시할 부족 핵심 재료 목록",
+    )
+    substitution_tips: list[RecommendationSubstitutionTip] = Field(
+        default_factory=list,
+        description="부족 핵심 재료별 대체 또는 구매 안내",
+    )
     recipe: list[str] = Field(description="단계별 조리 순서")
     recipe_steps: list[RecommendationRecipeStep] = Field(description="구조화된 단계별 조리 순서")
     missing_ingredients: list[str] = Field(description="현재 재고에 없어 추가로 필요한 재료의 한글 이름")
@@ -206,3 +234,18 @@ class RecommendationsResponse(BaseModel):
             "example": RECOMMENDATIONS_RESPONSE_EXAMPLE,
         }
     }
+
+
+class RecommendationRefreshRequest(BaseModel):
+    liquor: str = Field(min_length=1, max_length=100)
+    keep_recommendations: list[dict[str, Any]] = Field(default_factory=list)
+    refresh_count: int = Field(default=1, ge=0, le=3)
+    llm_fallback: bool = Field(
+        default=False,
+        description="true이면 seed 추천이 부족할 때 생성형 추천으로 부족한 추천만 보완합니다.",
+    )
+
+
+class RecommendationRefreshResponse(BaseModel):
+    liquor: str
+    recommendations: list[dict[str, Any]]

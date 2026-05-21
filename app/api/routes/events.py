@@ -5,6 +5,7 @@ from app.services.event_stream import (
     ingredient_event_broker,
     liquor_event_broker,
     recommendation_event_broker,
+    sensor_event_broker,
 )
 
 router = APIRouter(prefix="/api/v1/stream", tags=["실시간 스트림"])
@@ -65,6 +66,27 @@ async def stream_recommendation_events() -> StreamingResponse:
     queue = recommendation_event_broker.subscribe()
     return StreamingResponse(
         recommendation_event_broker.stream(queue),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+        },
+    )
+
+
+@router.get(
+    "/sensors",
+    summary="실시간 센서 이벤트 스트림",
+    description=(
+        "Jetson에 연결된 Arduino 센서 이벤트를 Server-Sent Events(SSE) 방식으로 스트리밍합니다. "
+        "문열림, 사용자 접근 여부와 백엔드가 계산한 recommended_mode를 확인할 수 있습니다."
+    ),
+    response_description="sensor 이벤트가 SSE 형식으로 지속적으로 전달됩니다.",
+)
+async def stream_sensor_events() -> StreamingResponse:
+    queue = sensor_event_broker.subscribe()
+    return StreamingResponse(
+        sensor_event_broker.stream(queue),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",

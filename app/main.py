@@ -25,11 +25,15 @@ openapi_tags = [
     },
     {
         "name": "실시간 스트림",
-        "description": "프론트엔드가 구독하는 SSE 스트림 API입니다. 식재료, 주류, 추천 결과를 실시간으로 전달합니다.",
+        "description": "프론트엔드가 구독하는 SSE 스트림 API입니다. 식재료, 주류, 센서, 추천 결과를 실시간으로 전달합니다.",
     },
     {
         "name": "추천",
         "description": "현재 재고와 주류 기준으로 추천 결과를 조회하는 API입니다.",
+    },
+    {
+        "name": "센서 이벤트",
+        "description": "Jetson-Arduino bridge가 전송하는 문열림/사용자 접근 센서 이벤트를 수신합니다.",
     },
 ]
 
@@ -50,10 +54,10 @@ app = FastAPI(
     version="0.1.0",
     description=(
         "술안주 추천 AI 냉장고 프로젝트의 백엔드 서버입니다.\n\n"
-        "현재는 식재료/주류 실시간 이벤트 수신, 재고 관리, 수동 스캔 fallback, "
-        "seed 레시피 기반 추천 반환 흐름을 우선 구현했습니다.\n\n"
+        "현재는 식재료/주류/센서 실시간 이벤트 수신, 재고 관리, "
+        "스캔 요청과 실제 AI 인식 결과 전달 분리, seed 레시피 기반 추천 반환 흐름을 구현했습니다.\n\n"
         "Swagger 문서에는 프론트가 직접 사용하는 API 중심으로 노출하며, "
-        "Jetson/AI 내부 입력용 API는 문서에서 숨겨져 있습니다."
+        "Jetson/AI 인식 결과 입력용 API는 문서에서 숨겨져 있습니다."
     ),
     openapi_tags=openapi_tags,
     lifespan=lifespan,
