@@ -28,6 +28,27 @@ class InventoryRepository:
         self.db.flush()
         return item
 
+    def set_inventory_count(self, item_name: str, quantity: int) -> InventoryItem:
+        item = self.get_inventory_item(item_name)
+        if item is None:
+            item = InventoryItem(item_name=item_name, count=max(quantity, 0))
+            self.db.add(item)
+            self.db.flush()
+            return item
+
+        item.count = max(quantity, 0)
+        self.db.flush()
+        return item
+
+    def delete_inventory_item(self, item_name: str) -> bool:
+        item = self.get_inventory_item(item_name)
+        if item is None:
+            return False
+
+        self.db.delete(item)
+        self.db.flush()
+        return True
+
     def create_event(
         self,
         *,

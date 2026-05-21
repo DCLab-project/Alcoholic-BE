@@ -3,7 +3,6 @@ from app.domain.models import InventoryItem
 
 
 DEMO_INVENTORY_COUNTS = {
-    "bacon": 4,
     "beef": 4,
     "bread": 4,
     "broccoli": 4,
@@ -26,10 +25,14 @@ DEMO_INVENTORY_COUNTS = {
     "pork": 4,
     "potato": 5,
     "sausage": 4,
-    "spinach": 3,
     "tomato": 5,
-    "yogurt": 3,
     "zucchini": 3,
+    "lemon": 3,
+    "avocado": 2,
+    "radish": 2,
+    "tofu": 3,
+    "ginger": 2,
+    "salmon": 2,
 }
 
 

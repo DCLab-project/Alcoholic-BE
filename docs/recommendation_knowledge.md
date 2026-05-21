@@ -36,8 +36,8 @@
 현재 seed 규모:
 
 - 주류 7종
-- 각 주류당 30개 레시피
-- 총 210개
+- 각 주류당 50개 레시피
+- 총 350개
 
 주류 카테고리:
 
@@ -366,7 +366,7 @@ seed 선정 기준과 추천 점수 정책은 `docs/recommendation_policy.md`에
 - LLM 기반 설명 보완
 
 ## 11. 다음 작업 제안
-1. 현재 210개 seed를 FE 화면 기준으로 체감 검수
+1. 현재 350개 seed를 FE 화면 기준으로 체감 검수
 2. 추천 결과의 `priority_reason`, `selection_factors`, `missing_ingredients` 표시 방식 확정
 3. Swagger/API 예시를 실제 응답 구조와 1:1로 정리
 4. 주류별 seed를 30개 이상으로 확장할 때 `approved`와 `draft` 상태 필드 추가 검토

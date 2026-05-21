@@ -13,10 +13,16 @@ from sqlalchemy.orm import sessionmaker
 
 from app.db import Base
 from app.domain.models import InventoryItem
+from app.repositories.favorite_recipe_repository import FavoriteRecipeRepository
 from app.repositories.inventory_repository import InventoryRepository
 from app.seeds.recommendation_seed import seed_recommendation_data
+from app.schemas.favorite_recipe import FavoriteRecipeCreate
 from app.schemas.inventory import InventoryBulkCreate
-from app.schemas.recommendation import RecommendationsResponse
+from app.schemas.inventory import InventoryCreateRequest, InventoryUpdateRequest
+from app.schemas.recognition import IngredientStreamEvent, LiquorStreamEvent
+from app.schemas.recommendation import RecommendationRefreshRequest, RecommendationsResponse
+from app.schemas.sensor import SensorEventCreate
+from app.services.favorite_recipe_service import FavoriteRecipeService
 from app.services.inventory_service import InventoryService
 from app.services.name_mapping import (
     ingredient_display_name,
@@ -24,8 +30,8 @@ from app.services.name_mapping import (
     normalize_ingredient_key,
     normalize_liquor_key,
 )
-from app.services.recognition_service import MOCK_LIQUOR_SCAN_CANDIDATES
 from app.services.recommendation_service import RecommendationService
+from app.services.sensor_service import SensorService
 
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
@@ -33,11 +39,16 @@ SEED_PATH = ROOT_DIR / "seeds" / "recommendations.json"
 POLICY_PATH = ROOT_DIR / "docs" / "recommendation_policy.md"
 README_PATH = ROOT_DIR / "README.md"
 EVENT_ROUTE_PATH = ROOT_DIR / "app" / "api" / "routes" / "events.py"
+SCAN_ROUTE_PATH = ROOT_DIR / "app" / "api" / "routes" / "scan.py"
+RECOGNITION_SERVICE_PATH = ROOT_DIR / "app" / "services" / "recognition_service.py"
 OPERATIONS_READINESS_PATH = ROOT_DIR / "docs" / "operations_readiness.md"
 DB_INIT_SCRIPT_PATH = ROOT_DIR / "scripts" / "initialize_database.py"
+HARDWARE_SMOKE_SCRIPT_PATH = ROOT_DIR / "scripts" / "smoke_hardware_flow.py"
+FE_API_CONTRACT_PATH = ROOT_DIR / "docs" / "api_contract_fe.md"
+AI_API_CONTRACT_PATH = ROOT_DIR / "docs" / "api_contract_ai.md"
+API_CHANGE_WORKFLOW_PATH = ROOT_DIR / "docs" / "api_change_workflow.md"
 
 ALLOWED_INGREDIENT_KEYS = {
-    "bacon",
     "beef",
     "bread",
     "broccoli",
@@ -60,20 +71,24 @@ ALLOWED_INGREDIENT_KEYS = {
     "pork",
     "potato",
     "sausage",
-    "spinach",
     "tomato",
-    "yogurt",
     "zucchini",
+    "lemon",
+    "avocado",
+    "radish",
+    "tofu",
+    "ginger",
+    "salmon",
 }
 
 EXPECTED_LIQUOR_COUNTS = {
-    "soju": 30,
-    "beer": 30,
-    "red_wine": 30,
-    "white_wine": 30,
-    "sparkling_wine": 30,
-    "whisky": 30,
-    "sake": 30,
+    "soju": 50,
+    "beer": 50,
+    "red_wine": 50,
+    "white_wine": 50,
+    "sparkling_wine": 50,
+    "whisky": 50,
+    "sake": 50,
 }
 
 LIQUOR_DISPLAY_NAMES = {
@@ -373,6 +388,9 @@ class MappingQualityGateTest(unittest.TestCase):
     def test_ingredient_mapping_accepts_korean_and_internal_keys(self) -> None:
         self.assertEqual("green_onion", normalize_ingredient_key("대파"))
         self.assertEqual("green_onion", normalize_ingredient_key("green_onion"))
+        self.assertEqual("green_onion", normalize_ingredient_key("leek"))
+        self.assertEqual("green_onion", normalize_ingredient_key("scallion"))
+        self.assertEqual("green_onion", normalize_ingredient_key("spring_onion"))
         self.assertEqual("pepper", normalize_ingredient_key("파프리카"))
         self.assertEqual("대파", ingredient_display_name("green_onion"))
         self.assertEqual("파프리카", ingredient_display_name("pepper"))
@@ -387,12 +405,67 @@ class MappingQualityGateTest(unittest.TestCase):
         self.assertEqual("sparkling_wine", normalize_liquor_key("스파클링와인"))
         self.assertEqual("스파클링와인", liquor_display_name("sparkling_wine"))
 
-    def test_manual_scan_mock_covers_all_seed_liquors(self) -> None:
-        self.assertEqual(
-            set(EXPECTED_LIQUOR_COUNTS),
-            set(MOCK_LIQUOR_SCAN_CANDIDATES),
+    def test_stream_events_include_scan_request_id(self) -> None:
+        ingredient_event = IngredientStreamEvent(
+            ingredient_name="대파",
+            timestamp="2026-04-10T17:16:01Z",
+            scan_request_id="ingredient-scan-001",
         )
-        self.assertEqual(7, len(MOCK_LIQUOR_SCAN_CANDIDATES))
+        liquor_event = LiquorStreamEvent(
+            liquor_name="소주",
+            timestamp="2026-04-10T17:20:00Z",
+            scan_request_id="liquor-scan-001",
+        )
+
+        self.assertEqual("ingredient-scan-001", ingredient_event.scan_request_id)
+        self.assertEqual("liquor-scan-001", liquor_event.scan_request_id)
+
+    def test_scan_start_contract_has_no_mock_auto_publish_flow(self) -> None:
+        recognition_service_text = RECOGNITION_SERVICE_PATH.read_text(encoding="utf-8")
+        scan_route_text = SCAN_ROUTE_PATH.read_text(encoding="utf-8")
+
+        for forbidden in [
+            "MOCK_",
+            "_mock_",
+            "manual_scan_mock",
+            "choice(",
+        ]:
+            with self.subTest(forbidden=forbidden):
+                self.assertNotIn(forbidden, recognition_service_text)
+
+        self.assertNotIn("mock", scan_route_text.lower())
+
+    def test_sensor_event_policy_prioritizes_door_open_over_motion(self) -> None:
+        service = SensorService()
+
+        door_open_event = service.build_sensor_event(
+            SensorEventCreate(
+                device_id="jetson-arduino-bridge",
+                door_open=True,
+                motion_detected=True,
+                source="arduino",
+            )
+        )
+        motion_only_event = service.build_sensor_event(
+            SensorEventCreate(
+                device_id="jetson-arduino-bridge",
+                door_open=False,
+                motion_detected=True,
+                source="arduino",
+            )
+        )
+        standby_event = service.build_sensor_event(
+            SensorEventCreate(
+                device_id="jetson-arduino-bridge",
+                raw={"door": "closed", "pir": 0, "ultrasonic_cm": "42.5"},
+                source="arduino",
+            )
+        )
+
+        self.assertEqual("ingredient_scan", door_open_event.recommended_mode)
+        self.assertEqual("liquor_scan_ready", motion_only_event.recommended_mode)
+        self.assertEqual("standby", standby_event.recommended_mode)
+        self.assertEqual(42.5, standby_event.distance_cm)
 
 
 class PolicyDocumentationQualityGateTest(unittest.TestCase):
@@ -446,6 +519,11 @@ class SwaggerDocumentationQualityGateTest(unittest.TestCase):
         self.assertEqual(["돼지고기"], first["missing_ingredients"])
         self.assertEqual(["대파", "상추"], first["ingredient_yes"])
         self.assertEqual(["돼지고기"], first["ingredient_no"])
+        self.assertEqual(["돼지고기"], first["shopping_items"])
+        self.assertEqual(
+            "돼지고기",
+            first["substitution_tips"][0]["missing_ingredient"],
+        )
         self.assertIn("recipe_steps", first)
         self.assertIn("pairing_knowledge", first)
         self.assertIn("score_breakdown", first)
@@ -457,6 +535,56 @@ class SwaggerDocumentationQualityGateTest(unittest.TestCase):
         example_text = json.dumps(example, ensure_ascii=False)
         self.assertNotIn('"liquor": "soju"', example_text)
         self.assertNotIn('"missing_ingredients": ["pork"', example_text)
+
+    def test_api_contract_docs_cover_fe_and_ai_handoff_fields(self) -> None:
+        fe_contract = FE_API_CONTRACT_PATH.read_text(encoding="utf-8")
+        ai_contract = AI_API_CONTRACT_PATH.read_text(encoding="utf-8")
+        workflow = API_CHANGE_WORKFLOW_PATH.read_text(encoding="utf-8")
+
+        fe_required_terms = [
+            "`/api/v1/recommendations`",
+            "`/api/v1/recommendations/refresh`",
+            "`/api/v1/favorite-recipes`",
+            "ingredient_yes",
+            "ingredient_no",
+            "missing_ingredients",
+            "ingredient_details[].status",
+            "`available_only`",
+            "`max_missing_count`",
+            "`max_cook_time_minutes`",
+            "`difficulty`",
+            "`shopping_items`",
+            "`substitution_tips`",
+            "`green_onion` | 대파",
+            "`pepper`는 고추가 아니라 파프리카",
+        ]
+        ai_required_terms = [
+            "POST `/api/v1/sensors/events`",
+            "`GET /api/v1/stream/sensors`",
+            "jetson-arduino-bridge",
+            "POST `/api/v1/recognitions/ingredients`",
+            "POST `/api/v1/recognitions/liquor`",
+            "leek`, `scallion`, `spring_onion`",
+            "BE에서 `green_onion`으로 정규화",
+            "lemon, avocado, radish, tofu, ginger, salmon",
+            "soju, beer, red_wine, white_wine, sparkling_wine, whisky, sake",
+        ]
+        workflow_required_terms = [
+            "main 직접 push/merge 금지",
+            "새 기능/수정은 GitHub issue 먼저 생성",
+            "Sheet Template",
+            "기존 FE 응답 필드는 깨지지 않게 additive change 우선",
+        ]
+
+        for term in fe_required_terms:
+            with self.subTest(doc="fe", term=term):
+                self.assertIn(term, fe_contract)
+        for term in ai_required_terms:
+            with self.subTest(doc="ai", term=term):
+                self.assertIn(term, ai_contract)
+        for term in workflow_required_terms:
+            with self.subTest(doc="workflow", term=term):
+                self.assertIn(term, workflow)
 
     def test_readme_recommendation_example_uses_display_values(self) -> None:
         readme_text = README_PATH.read_text(encoding="utf-8")
@@ -504,6 +632,49 @@ class OperationsReadinessQualityGateTest(unittest.TestCase):
         self.assertIn("docs/operations_readiness.md", readme_text)
         self.assertIn("scripts/initialize_database.py", readme_text)
 
+    def test_readme_documents_current_hardware_integration_flow(self) -> None:
+        readme_text = README_PATH.read_text(encoding="utf-8")
+
+        required_terms = [
+            "`POST /api/v1/scan/ingredients/start`",
+            "`POST /api/v1/scan/liquor/start`",
+            "`/api/v1/recognitions/ingredients`",
+            "`/api/v1/recognitions/liquor`",
+            "`POST /api/v1/sensors/events`",
+            "`GET /api/v1/stream/sensors`",
+            "scripts/smoke_hardware_flow.py",
+            "Gemini 보조 fallback 추천",
+            "AI팀 Jetson/Arduino 실제 payload 기준 현장 E2E 테스트",
+        ]
+
+        for term in required_terms:
+            with self.subTest(term=term):
+                self.assertIn(term, readme_text)
+
+        self.assertNotIn("mock 수동 스캔 흐름", readme_text)
+        self.assertNotIn("실제 Gemini / LLM 추천 생성", readme_text)
+
+    def test_hardware_smoke_script_covers_sensor_recognition_and_recommendation_flow(
+        self,
+    ) -> None:
+        script_text = HARDWARE_SMOKE_SCRIPT_PATH.read_text(encoding="utf-8")
+
+        required_terms = [
+            '"/api/v1/scan/ingredients/start"',
+            '"/api/v1/sensors/events"',
+            '"/api/v1/recognitions/ingredients"',
+            '"/api/v1/inventory/bulk"',
+            '"/api/v1/scan/liquor/start"',
+            '"/api/v1/recognitions/liquor"',
+            '"/api/v1/recommendations"',
+            '"ingredient_scan"',
+            '"liquor_scan_ready"',
+        ]
+
+        for term in required_terms:
+            with self.subTest(term=term):
+                self.assertIn(term, script_text)
+
 
 class ServiceQualityGateTest(unittest.TestCase):
     def setUp(self) -> None:
@@ -547,6 +718,66 @@ class ServiceQualityGateTest(unittest.TestCase):
         self.assertEqual(3, response.saved_count)
         self.assertEqual(2, quantities["대파"])
         self.assertEqual(1, quantities["양파"])
+
+    def test_inventory_manual_crud_supports_fe_contract(self) -> None:
+        service = InventoryService(self.db, InventoryRepository(self.db))
+
+        created = service.add_inventory_item(
+            InventoryCreateRequest(ingredient_name="마늘", quantity=3)
+        )
+        updated = service.update_inventory_item(
+            "마늘",
+            InventoryUpdateRequest(new_ingredient_name="대파", quantity=5),
+        )
+        renamed = service.update_inventory_item(
+            "대파",
+            InventoryUpdateRequest(ingredient_name="양파", quantity=2),
+        )
+        service.delete_inventory_item("대파")
+        quantities = {
+            item.ingredient_name: item.quantity
+            for item in service.list_inventory().data
+        }
+
+        self.assertEqual("success", created.status)
+        self.assertEqual("마늘", created.ingredient_name)
+        self.assertEqual(3, created.current_quantity)
+        self.assertEqual("success", updated.status)
+        self.assertEqual("대파", updated.ingredient_name)
+        self.assertEqual(5, updated.current_quantity)
+        self.assertEqual("양파", renamed.ingredient_name)
+        self.assertEqual(2, renamed.current_quantity)
+        self.assertIn("양파", quantities)
+        self.assertNotIn("대파", quantities)
+
+    def test_favorite_recipe_crud_preserves_recommendation_payload(self) -> None:
+        service = FavoriteRecipeService(
+            self.db,
+            FavoriteRecipeRepository(self.db),
+        )
+        payload = FavoriteRecipeCreate(
+            liquor="소주",
+            name="대파 삼겹살 볶음",
+            reason="소주와 잘 어울립니다.",
+            ingredient_yes=["대파"],
+            ingredient_no=["돼지고기"],
+            recipe=["1. 대파를 썹니다."],
+            missing_ingredients=["돼지고기"],
+            priority_rank=1,
+        )
+
+        created = service.create_favorite(payload)
+        listed = service.list_favorites()
+        detail = service.get_favorite(created.favorite_id)
+        deleted = service.delete_favorite(created.favorite_id)
+
+        self.assertEqual("success", created.status)
+        self.assertEqual(1, len(listed.data))
+        self.assertEqual(str(created.favorite_id), detail.data["favorite_id"])
+        self.assertEqual(str(created.favorite_id), detail.data["id"])
+        self.assertEqual(1, detail.data["priority_rank"])
+        self.assertEqual(["돼지고기"], detail.data["missing_ingredients"])
+        self.assertEqual("success", deleted.status)
 
     def test_recommendation_accepts_korean_liquor_and_returns_display_safe_text(self) -> None:
         response = RecommendationService(self.db).get_recommendations("레드와인", False)
@@ -597,6 +828,34 @@ class ServiceQualityGateTest(unittest.TestCase):
             self.assertEqual(expected_yes, recommendation.ingredient_yes)
             self.assertEqual(expected_no, recommendation.ingredient_no)
             self.assertEqual(expected_no, recommendation.missing_ingredients)
+            self.assertEqual(expected_no, recommendation.shopping_items)
+            self.assertEqual(
+                expected_no,
+                [tip.missing_ingredient for tip in recommendation.substitution_tips],
+            )
+
+    def test_recommendation_filters_support_fe_ux_controls(self) -> None:
+        service = RecommendationService(self.db)
+
+        available_only = service.get_recommendations("소주", False, available_only=True)
+        quick_easy = service.get_recommendations(
+            "소주",
+            False,
+            max_missing_count=3,
+            max_cook_time_minutes=20,
+            difficulty="easy",
+        )
+
+        self.assertTrue(
+            all(len(item.ingredient_no) == 0 for item in available_only.recommendations)
+        )
+        self.assertTrue(
+            all(len(item.ingredient_no) <= 3 for item in quick_easy.recommendations)
+        )
+        self.assertTrue(
+            all(item.cook_time_minutes <= 20 for item in quick_easy.recommendations)
+        )
+        self.assertTrue(all(item.difficulty == "easy" for item in quick_easy.recommendations))
 
     def test_refresh_rotates_beyond_two_recommendation_sets(self) -> None:
         service = RecommendationService(self.db)
@@ -611,6 +870,25 @@ class ServiceQualityGateTest(unittest.TestCase):
 
         self.assertEqual(12, len(seen_names))
         self.assertGreaterEqual(len(set(seen_names)), 9)
+
+    def test_partial_refresh_keeps_selected_recommendation(self) -> None:
+        service = RecommendationService(self.db)
+        original = service.get_recommendations("소주", False)
+        kept = original.recommendations[0].model_dump(mode="json")
+
+        response = service.refresh_with_keep(
+            RecommendationRefreshRequest(
+                liquor="소주",
+                keep_recommendations=[kept],
+                refresh_count=2,
+            )
+        )
+        names = [item["name"] for item in response.recommendations]
+
+        self.assertEqual("소주", response.liquor)
+        self.assertEqual(3, len(response.recommendations))
+        self.assertEqual(kept["name"], response.recommendations[0]["name"])
+        self.assertEqual(len(names), len(set(names)))
 
     def test_all_liquor_recommendation_responses_are_display_safe(self) -> None:
         service = RecommendationService(self.db)
