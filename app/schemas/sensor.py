@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
@@ -30,7 +30,7 @@ class SensorEventCreate(BaseModel):
         description="Optional ultrasonic distance reading in centimeters.",
     )
     timestamp: datetime = Field(
-        default_factory=lambda: datetime.now(UTC),
+        default_factory=lambda: datetime.now(timezone.utc),
         description="Sensor event timestamp.",
     )
     source: str = Field(

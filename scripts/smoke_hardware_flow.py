@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import time
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
@@ -11,7 +11,7 @@ from urllib.request import Request, urlopen
 
 
 def utc_now() -> str:
-    return datetime.now(UTC).isoformat().replace("+00:00", "Z")
+    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
 def request_json(
